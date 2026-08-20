@@ -1,0 +1,55 @@
+{
+  "name": "Rotina — planejar, executar, registrar",
+  "short_name": "Rotina",
+  "description": "Diário operacional e planejador pessoal. Funciona offline e guarda tudo no seu aparelho.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./index.html#/hoje",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar o que fiz",
+      "short_name": "Registrar",
+      "url": "./index.html?acao=registrar#/registro",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Criar por voz",
+      "short_name": "Voz",
+      "url": "./index.html?acao=voz#/hoje",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Criar por texto",
+      "short_name": "Texto",
+      "url": "./index.html?acao=texto#/hoje",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Entrada rápida",
+      "short_name": "Entrada",
+      "url": "./index.html?acao=entrada#/entrada",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "titulo",
+      "text": "texto",
+      "url": "link"
+    }
+  }
+}
