@@ -5,7 +5,7 @@ import * as S from './core/store.js';
 import * as Router from './core/router.js';
 import { on } from './core/bus.js';
 import * as Rem from './features/reminders.js';
-import { openQuickAdd } from './ui/quickadd.js';
+import { openQuickAdd, instantLog } from './ui/quickadd.js';
 import { closeTop, hasOpen } from './ui/modal.js';
 import { toast } from './ui/toast.js';
 import { applyTheme } from './views/config.js';
@@ -65,6 +65,7 @@ function refreshIfVisible() {
 
 function wireChrome() {
   $('#fab').addEventListener('click', () => openQuickAdd(() => Router.render()));
+  $('#fabLog').addEventListener('click', () => instantLog(() => Router.render()));
   $('#btnSearch').addEventListener('click', () => Router.go('#/busca'));
   $('#btnTheme').addEventListener('click', async () => {
     const order = ['auto', 'light', 'dark'];
@@ -135,7 +136,7 @@ function handleShareTarget() {
   }
   if (action) {
     import('./ui/quickadd.js').then(m => {
-      if (action === 'registrar') m.quickLog(() => Router.render());
+      if (action === 'registrar') m.instantLog(() => Router.render());
       if (action === 'voz') m.openVoiceCapture(() => Router.render());
       if (action === 'texto') m.openTextCapture('', () => Router.render());
       if (action === 'entrada') m.openInboxCapture().then(() => Router.render());

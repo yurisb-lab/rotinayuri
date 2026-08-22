@@ -5,6 +5,7 @@ import * as db from './db.js';
 import { emit } from './bus.js';
 import { iso, today, nowISO, nowTime, addDays, diffDays, minutes } from '../util/date.js';
 import * as R from '../features/recurrence.js';
+import { normalizeText } from '../features/nlp.js';
 
 export const uid = (p = 'i') =>
   `${p}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS = {
   aiModel: '',
   lastBackup: null,
   onboarded: false,
+  schemaVersion: 1,
 };
 
 export const STATUS = {
@@ -73,7 +75,66 @@ export async function init() {
   const rows = await db.getAll('settings');
   cache.settings = { ...DEFAULT_SETTINGS };
   rows.forEach(r => { cache.settings[r.key] = r.value; });
+  await migrate();
   return cache;
+}
+
+/* ---------------------------------------------------------------- migração
+   Roda uma vez por versão de esquema. A v2 semeia os registros de pessoas e
+   lugares a partir do que já foi escrito em tarefas, compromissos e registros —
+   nada é perdido nem precisa ser digitado de novo. */
+async function migrate() {
+  const from = cache.settings.schemaVersion || 1;
+  if (from >= db.DB_VERSION) return null;
+  let seeded = null;
+  try {
+    if (from < 2) seeded = await seedRegistries();
+    await settings.set('schemaVersion', db.DB_VERSION);
+  } catch (e) {
+    console.warn('Migração incompleta; será tentada de novo na próxima abertura.', e);
+  }
+  return seeded;
+}
+
+/** Extrai pessoas e lugares já mencionados e grava nos registros novos.
+    Idempotente: só cria o que ainda não existe, então pode rodar de novo
+    depois de restaurar um backup. */
+export async function seedRegistries() {
+  const [tsk, evt, lg] = await Promise.all([
+    db.getAll('tasks'), db.getAll('events'), db.getAll('logs'),
+  ]);
+  const pMap = new Map(), lMap = new Map();
+  const bump = (map, name, date) => {
+    const key = identityKey(name);
+    if (key.length < 2) return;
+    const d = date || today();
+    const cur = map.get(key);
+    if (!cur) map.set(key, { name: String(name).trim(), firstSeen: d, lastSeen: d });
+    else {
+      if (d < cur.firstSeen) cur.firstSeen = d;
+      if (d > cur.lastSeen) cur.lastSeen = d;
+    }
+  };
+  for (const t of tsk) { (t.people || []).forEach(n => bump(pMap, n, t.date)); bump(lMap, t.place, t.date); }
+  for (const e of evt) { (e.people || []).forEach(n => bump(pMap, n, e.date)); bump(lMap, e.location, e.date); }
+  for (const l of lg) {
+    const names = l.people?.length ? l.people : (l.person ? [l.person] : []);
+    names.forEach(n => bump(pMap, n, l.date));
+    bump(lMap, l.place, l.date);
+  }
+
+  const [havePeople, havePlaces] = await Promise.all([db.getAll('people'), db.getAll('places')]);
+  const rowsOf = (map, prefix, have) => [...map.entries()]
+    .filter(([key]) => !have.has(key))
+    .map(([key, v]) => ({ id: uid(prefix), key, name: v.name, aliases: [], note: '',
+      firstSeen: v.firstSeen, lastSeen: v.lastSeen }));
+
+  const pRows = rowsOf(pMap, 'per', new Set(havePeople.map(r => r.key)));
+  const lRows = rowsOf(lMap, 'plc', new Set(havePlaces.map(r => r.key)));
+  await db.putMany('people', pRows);
+  await db.putMany('places', lRows);
+  if (pRows.length || lRows.length) { emit('people'); emit('places'); emit('data'); }
+  return { people: pRows.length, places: lRows.length };
 }
 
 /* ------------------------------------------------------------- configurações */
@@ -136,6 +197,63 @@ export const categories = {
   },
 };
 
+/* ------------------------------------------------- pessoas e lugares (v2)
+   Registro de identidade, não de contagem: guarda quem/onde existe e quando
+   apareceu pela primeira e pela última vez. Quantas vezes é calculado na
+   hora, para que reeditar um item não infle nenhum número. */
+
+/** Chave de identidade: sem acento, minúscula, espaços normalizados. */
+export const identityKey = name =>
+  normalizeText(String(name || '').trim()).replace(/\s+/g, ' ');
+
+function registry(storeName, prefix, event) {
+  const api = {
+    all: () => db.getAll(storeName),
+    get: id => db.get(storeName, id),
+    async byName(name) {
+      const key = identityKey(name);
+      if (!key) return null;
+      const rows = await db.byIndex(storeName, 'key', key).catch(() => []);
+      return rows[0] || null;
+    },
+    /** Cria ou atualiza a partir de uma menção. Não conta ocorrências. */
+    async touch(name, date = today()) {
+      const key = identityKey(name);
+      if (key.length < 2) return null;
+      const found = await api.byName(name);
+      const rec = found
+        ? { ...found,
+            name: found.name || String(name).trim(),
+            firstSeen: found.firstSeen && found.firstSeen < date ? found.firstSeen : date,
+            lastSeen: found.lastSeen && found.lastSeen > date ? found.lastSeen : date }
+        : { id: uid(prefix), key, name: String(name).trim(), aliases: [], note: '',
+            firstSeen: date, lastSeen: date };
+      await db.put(storeName, rec);
+      return rec;
+    },
+    /** Registra várias menções de uma vez (usado ao salvar itens). */
+    async touchAll(names, date = today()) {
+      const list = [...new Set((names || []).map(n => String(n || '').trim()).filter(Boolean))];
+      if (!list.length) return [];
+      const out = [];
+      for (const n of list) { const r = await api.touch(n, date); if (r) out.push(r); }
+      if (out.length) { emit(event); emit('data'); }
+      return out;
+    },
+    async save(rec) {
+      const saved = { ...rec, key: identityKey(rec.name) };
+      await db.put(storeName, saved);
+      emit(event); emit('data');
+      return saved;
+    },
+    remove: async id => { await db.del(storeName, id); emit(event); emit('data'); },
+  };
+  return api;
+}
+
+export const people = registry('people', 'per', 'people');
+export const places = registry('places', 'plc', 'places');
+
 /* -------------------------------------------------------------- ocorrências */
 const occId = (itemId, date) => `${itemId}|${date}`;
 
@@ -181,6 +299,7 @@ export function newTask(patch = {}) {
     priority: 'media', status: 'pendente',
     recurrence: null, reminders: [], subtasks: [], notes: '',
     people: [], place: '', tags: [],
+    postponeCount: 0, history: [],
     createdAt: nowISO(), updatedAt: nowISO(), completedAt: null,
     ...patch,
   };
@@ -195,6 +314,8 @@ export const tasks = {
     if (rec.status === 'concluida' && !rec.completedAt) rec.completedAt = nowISO();
     if (rec.status !== 'concluida') rec.completedAt = null;
     await db.put('tasks', rec);
+    await people.touchAll(rec.people, rec.date);
+    await places.touchAll([rec.place], rec.date);
     const { syncReminders } = await import('../features/reminders.js');
     await syncReminders(rec);
     emit('tasks'); emit('data');
@@ -249,15 +370,20 @@ export const tasks = {
     if (!base) return null;
     return tasks.save({ ...base, status, completedAt: status === 'concluida' ? nowISO() : null });
   },
-  /** Move a tarefa para outra data (usado no arrastar do calendário e no fechamento). */
+  /** Move a tarefa para outra data (usado no arrastar do calendário e no fechamento).
+      Adiar (mover para a frente) fica registrado — é o que permite responder
+      "quais tarefas eu mais adiei" mais tarde. Antecipar não conta como adiamento. */
   async move(instance, date, time = undefined) {
     if (instance.isOccurrence) {
       const base = await db.get('tasks', instance.id);
       const rec = { ...base.recurrence, exceptions: [...(base.recurrence?.exceptions || []), instance.date] };
       await db.put('tasks', { ...base, recurrence: rec, updatedAt: nowISO() });
+      const postponed = date > instance.date;
       const copy = newTask({
         ...base, id: uid('tsk'), recurrence: null, date, status: 'pendente',
         time: time !== undefined ? time : base.time, createdAt: nowISO(),
+        postponeCount: postponed ? 1 : 0,
+        history: postponed ? [{ at: nowISO(), from: instance.date, to: date }] : [],
       });
       await db.put('tasks', copy);
       emit('tasks'); emit('data');
@@ -265,7 +391,14 @@ export const tasks = {
     }
     const base = await db.get('tasks', instance.id);
     if (!base) return null;
-    return tasks.save({ ...base, date, ...(time !== undefined ? { time } : {}) });
+    const postponed = base.date && date > base.date;
+    return tasks.save({
+      ...base, date, ...(time !== undefined ? { time } : {}),
+      postponeCount: (base.postponeCount || 0) + (postponed ? 1 : 0),
+      history: postponed
+        ? [...(base.history || []), { at: nowISO(), from: base.date, to: date }].slice(-40)
+        : (base.history || []),
+    });
   },
 };
 
@@ -288,6 +421,8 @@ export const events = {
     const rec = { ...newEvent(), ...evt, kind: 'event', updatedAt: nowISO() };
     rec.recurrence = R.normalize(rec.recurrence);
     await db.put('events', rec);
+    await people.touchAll(rec.people, rec.date);
+    await places.touchAll([rec.location], rec.date);
     const { syncReminders } = await import('../features/reminders.js');
     await syncReminders(rec);
     emit('events'); emit('data');
@@ -349,8 +484,9 @@ export function newLog(patch = {}) {
   return {
     id: uid('log'), kind: 'log',
     text: '', date: today(), time: nowTime(),
-    categoryId: null, person: '', place: '', tags: [],
+    categoryId: null, person: '', people: [], place: '', tags: [],
     source: 'manual', durationMin: null,
+    triaged: true, unplanned: false, linkedTaskId: null,
     createdAt: nowISO(), updatedAt: nowISO(),
     ...patch,
   };
@@ -360,9 +496,26 @@ export const logs = {
   get: id => db.get('logs', id),
   async save(log) {
     const rec = { ...newLog(), ...log, kind: 'log', updatedAt: nowISO() };
+    /* compatibilidade: `person` (texto) e `people` (lista) andam juntos, para
+       que telas antigas continuem lendo o campo que já conheciam. */
+    if (rec.people?.length) rec.person = rec.people[0];
+    else if (rec.person) rec.people = [rec.person];
+    else rec.people = [];
+    /* organizar em qualquer tela conclui a triagem */
+    if (rec.categoryId) rec.triaged = true;
     await db.put('logs', rec);
+    await people.touchAll(rec.people, rec.date);
+    await places.touchAll([rec.place], rec.date);
     emit('logs'); emit('data');
     return rec;
+  },
+  /** Registros ainda sem organização (capturados no "Fiz agora"), mais
+      recentes primeiro. Sem data, devolve os de todos os dias — deixar um
+      registro esquecido num dia anterior anularia o sentido da triagem. */
+  async untriaged(date) {
+    const rows = date ? await db.byIndex('logs', 'date', date) : await db.getAll('logs');
+    return rows.filter(l => l.triaged === false)
+      .sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
   },
   remove: async id => { await db.del('logs', id); emit('logs'); emit('data'); },
   async forDate(date) {

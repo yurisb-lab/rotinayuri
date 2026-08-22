@@ -59,6 +59,25 @@ ul{margin:0;padding:0;list-style:none}
 }
 .fab:active{transform:scale(.92)}
 
+/* "Fiz agora": atalho global de registro, visualmente secundário ao "+"
+   para que o botão principal continue sendo o de criar. */
+.fab--log{
+  right:16px;
+  bottom:calc(var(--tabbar-h) + var(--safe-b) + 84px);
+  width:auto;height:44px;border-radius:var(--r-full);
+  padding:0 16px 0 13px;gap:7px;
+  grid-auto-flow:column;align-items:center;
+  background:var(--c-bg-elev);color:var(--c-accent);
+  border:1px solid var(--c-line);
+  box-shadow:var(--c-shadow);
+  font-size:14px;font-weight:600;
+}
+.fab--log span{white-space:nowrap}
+@media (max-width:360px){
+  .fab--log span{display:none}
+  .fab--log{width:48px;padding:0}
+}
+
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:50;
   display:grid;grid-template-columns:repeat(7,1fr);

@@ -9,7 +9,7 @@ const fields = {
   tasks:  t => [t.title, t.description, t.notes, t.place, ...(t.people || []), ...(t.tags || []),
     ...(t.subtasks || []).map(s => s.title)],
   events: e => [e.title, e.description, e.notes, e.location, ...(e.people || []), ...(e.tags || [])],
-  logs:   l => [l.text, l.person, l.place, ...(l.tags || [])],
+  logs:   l => [l.text, l.person, ...(l.people || []), l.place, ...(l.tags || [])],
   notes:  n => [n.title, n.body, ...(n.items || []).map(i => i.text), ...(n.tags || [])],
   inbox:  i => [i.text],
   days:   d => [d.reflection, d.mood],
@@ -83,7 +83,11 @@ export async function facets() {
   };
   tasks.forEach(t => { (t.people || []).forEach(p => bump(people, p)); bump(places, t.place); });
   events.forEach(e => { (e.people || []).forEach(p => bump(people, p)); bump(places, e.location); });
-  logs.forEach(l => { bump(people, l.person); bump(places, l.place); });
+  logs.forEach(l => {
+    const names = l.people?.length ? l.people : (l.person ? [l.person] : []);
+    names.forEach(n => bump(people, n));
+    bump(places, l.place);
+  });
   const sort = m => [...m.entries()].sort((a, b) => b[1] - a[1]).map(([name, n]) => ({ name, n }));
   return { people: sort(people), places: sort(places) };
 }

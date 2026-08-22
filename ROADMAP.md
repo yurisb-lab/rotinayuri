@@ -1,5 +1,9 @@
 # Roteiro — de lista de tarefas a "Minha Memória"
 
+> **Estado:** fases 0, 1 e 2 implementadas. A contagem de adiamentos da fase 3 foi
+> antecipada, porque sem ela o dado dos meses seguintes não existiria. As fases 3 a 11
+> continuam abertas.
+
 Este documento organiza as ideias soltas em **12 funções** e as coloca numa ordem de
 implementação. Ele parte do que **já existe** no código (PWA local, IndexedDB, NLP em
 pt-BR, recorrências, linha do tempo, fechamento do dia) e diz, para cada fase, o que
@@ -72,7 +76,7 @@ Esforço: **P** ≈ uma sessão · **M** ≈ duas ou três · **G** ≈ várias.
 
 ---
 
-## FASE 0 · Fundação de dados — **P**
+## FASE 0 · Fundação de dados — **P** · ✅ FEITO
 
 Invisível para o usuário, destrava metade do resto. Vale fazer primeiro porque toda
 migração de banco depois fica mais cara.
@@ -95,7 +99,7 @@ seed, só precisa gravar em vez de devolver.
 
 ---
 
-## FASE 1 · F1 "Fiz agora" em todas as telas — **P**
+## FASE 1 · F1 "Fiz agora" em todas as telas — **P** · ✅ FEITO
 
 A função mais barata da lista inteira e a de maior impacto diário. É ela que enche o
 banco para as fases 8–12.
@@ -116,7 +120,7 @@ existe a atalho global, não construir do zero.
 
 ---
 
-## FASE 2 · Captura em lote + triagem — **P**
+## FASE 2 · Captura em lote + triagem — **P** · ✅ FEITO
 
 Ao inspecionar o código, esta fase é **bem menor do que parece**. Boa parte da "captura
 inteligente" já existe:
@@ -398,11 +402,11 @@ tasks       + postponeCount, history[]   ← antecipar para a fase 3
 
 ## 6. Resumo da ordem
 
-| # | Fase | Esforço | Bloco |
-|---|---|---|---|
-| 0 | Fundação de dados | P | escrever |
-| 1 | "Fiz agora" global | P | escrever |
-| 2 | Captura em lote + triagem | P | escrever |
+| # | Fase | Esforço | Bloco | |
+|---|---|---|---|---|
+| 0 | Fundação de dados | P | escrever | ✅ |
+| 1 | "Fiz agora" global | P | escrever | ✅ |
+| 2 | Captura em lote + triagem | P | escrever | ✅ |
 | 3 | Planejado × Aconteceu | M | mostrar |
 | 4 | Onde estou no meu dia | P | mostrar |
 | 5 | Pessoas + Lugares | M | mostrar |

@@ -3,7 +3,7 @@
 import { el, icon, clear } from '../util/dom.js';
 import * as S from '../core/store.js';
 import { taskItem, eventItem, logItem, noteCard, section, empty, actionLink } from '../ui/items.js';
-import { quickLog, openTextCapture, openVoiceCapture, openInboxCapture } from '../ui/quickadd.js';
+import { openTextCapture, openVoiceCapture, openInboxCapture, instantLog, triageLog } from '../ui/quickadd.js';
 import { editTask, editEvent } from '../ui/forms.js';
 import { today, fmtDate, addDays, DOW, fmtRelative, nowTime } from '../util/date.js';
 import { go } from '../core/router.js';
@@ -12,12 +12,13 @@ export const title = 'Hoje';
 
 export async function render(root, { refresh }) {
   const d = today();
-  const [stats, overdue, upcoming, notes, pendingInbox] = await Promise.all([
+  const [stats, overdue, upcoming, notes, pendingInbox, untriaged] = await Promise.all([
     S.dayStats(d),
     S.tasks.overdue(d),
     S.events.upcoming(14, addDays(d, 1)),
     S.notes.recent(4),
     S.inbox.pending(),
+    S.logs.untriaged(),
   ]);
 
   clear(root);
@@ -39,11 +40,26 @@ export async function render(root, { refresh }) {
 
   /* Ações rápidas ----------------------------------------------------- */
   root.appendChild(el('div', { class: 'quickbar' },
-    quick('log', 'Registrar', () => quickLog(refresh)),
+    quick('log', 'Fiz agora', () => instantLog(refresh)),
     quick('mic', 'Por voz', () => openVoiceCapture(refresh)),
     quick('text', 'Por texto', () => openTextCapture('', refresh)),
     quick('inbox', 'Entrada', async () => { await openInboxCapture(); refresh(); }),
   ));
+
+  /* Registros esperando organização -------------------------------------- */
+  if (untriaged.length) {
+    root.appendChild(el('section', { class: 'section' },
+      section('Registros para organizar', untriaged.length),
+      el('p', { class: 'tiny dim', style: { marginTop: '-6px', marginBottom: '10px' } },
+        'Capturados no "Fiz agora". Um toque para dar categoria, pessoa e local — ou deixe como está.'),
+      el('div', { class: 'stack' }, ...untriaged.slice(0, 8).map(l =>
+        el('div', { class: 'item', style: { '--cat': 'var(--c-warn)' }, onclick: () => triageLog(l, refresh) },
+          el('div', { style: { minWidth: '46px' } },
+            el('b', { style: { fontVariantNumeric: 'tabular-nums' } }, l.time || ''),
+            l.date !== d ? el('div', { class: 'tiny dim' }, fmtDate(l.date, 'num')) : null),
+          el('div', { class: 'item__body' }, el('div', { class: 'item__title' }, l.text)),
+          icon('chev', 'ic--sm'))))));
+  }
 
   /* Compromissos de hoje ---------------------------------------------- */
   const evs = stats.events;
@@ -99,7 +115,7 @@ export async function render(root, { refresh }) {
       actionLink('ver tudo', () => go('#/registro'))),
     stats.logs.length
       ? el('div', { class: 'stack' }, ...stats.logs.slice(-6).reverse().map(l => logItem(l, { onChange: refresh })))
-      : empty('Nenhum registro ainda. Toque em "Registrar" quando fizer algo.')));
+      : empty('Nenhum registro ainda. Toque em "Fiz agora" quando fizer algo.')));
 
   /* Entrada pendente ------------------------------------------------------ */
   if (pendingInbox.length) {

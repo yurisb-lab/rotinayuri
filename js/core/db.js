@@ -1,7 +1,7 @@
 /* Camada IndexedDB — sem dependências externas, tudo local no dispositivo. */
 
 export const DB_NAME = 'rotina';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const STORES = {
   tasks:       { keyPath: 'id', indexes: [['date','date'], ['status','status'], ['categoryId','categoryId'], ['updatedAt','updatedAt']] },
@@ -14,6 +14,12 @@ export const STORES = {
   occurrences: { keyPath: 'id', indexes: [['seriesId','seriesId'], ['date','date']] },
   reminders:   { keyPath: 'id', indexes: [['at','at'], ['refId','refId']] },
   settings:    { keyPath: 'key' },
+
+  /* v2 — base da "Minha Memória" ------------------------------------- */
+  people:      { keyPath: 'id', indexes: [['key','key'], ['lastSeen','lastSeen']] },
+  places:      { keyPath: 'id', indexes: [['key','key'], ['lastSeen','lastSeen']] },
+  moments:     { keyPath: 'id', indexes: [['date','date'], ['createdAt','createdAt']] },
+  checkins:    { keyPath: 'id', indexes: [['date','date']] },
 };
 
 let _db = null;

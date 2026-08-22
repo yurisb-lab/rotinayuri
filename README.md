@@ -10,6 +10,8 @@ planejamento. Funciona offline, instala no celular e **guarda tudo apenas no seu
 - Todos os dados ficam no **IndexedDB** do navegador.
 - Backup e restauração por arquivo **JSON**.
 
+O plano de evolução do app está em [`ROADMAP.md`](ROADMAP.md).
+
 ---
 
 ## Como usar
@@ -38,7 +40,7 @@ Depois de instalado, o app abre e funciona sem internet.
 
 | Tela | O que faz |
 |---|---|
-| **Hoje** | Painel do dia: progresso, compromissos, tarefas, recorrentes, atrasadas, registros, entrada e anotações. Botão **Fechar meu dia**. |
+| **Hoje** | Painel do dia: progresso, registros a organizar, compromissos, tarefas, recorrentes, atrasadas, registros, entrada e anotações. Botão **Fechar meu dia**. |
 | **Tarefas** | Lista com filtros por período, status e categoria + busca. |
 | **Calendário** | Visões de **mês, semana, dia e agenda**. Segure e arraste um item para mudar data/hora. |
 | **Registro do dia** | "O que fiz hoje", linha do tempo do dia e fechamento com resumo. |
@@ -49,6 +51,23 @@ Depois de instalado, o app abre e funciona sem internet.
 ---
 
 ## Criação rápida
+
+### "Fiz agora" — captura em um toque
+
+O botão **Fiz agora** fica em todas as telas, logo acima do **+**. Ele grava o que
+acabou de acontecer com o horário atual e **nada mais**: sem categoria, sem pessoa,
+sem local. Pedir organização no momento da captura é justamente o atrito que faz a
+pessoa deixar de registrar.
+
+O texto é guardado exatamente como foi escrito ou ditado — não passa pelo
+interpretador. Logo depois aparece um aviso com **desfazer**.
+
+Os registros capturados assim ficam marcados como pendentes de organização e
+aparecem em **Hoje → Registros para organizar**. Lá, um toque abre categoria,
+pessoas, local e horário — e **"Deixar assim"** é uma saída legítima: nada ali é
+obrigatório.
+
+### Menu completo
 
 O botão **+** (canto inferior direito) abre:
 
@@ -83,6 +102,24 @@ recorrência e lembretes antes de salvar.
 Também reconhece: `hoje`, `amanhã`, `depois de amanhã`, `semana que vem`,
 `em 3 dias`, `dia 27`, `27 de agosto`, `das 14h às 16h`, `meio-dia`,
 `8 da manhã`, `a cada 15 dias`, `fins de semana`, `#tags` e prioridades.
+
+### Vários itens de uma vez
+
+Um texto colado, ditado ou compartilhado de outro aplicativo vira **vários itens**,
+separados por quebra de linha, `;`, "e depois" e também por **ponto final**. Assim:
+
+> Domingo às 18h tem culto. Antes preciso preparar os slides. Segunda tenho reunião às 10.
+
+vira três itens — o culto no domingo às 18:00, uma tarefa para preparar os slides e
+a reunião na segunda às 10:00. Todos passam pela tela de confirmação antes de salvar.
+
+A quebra por ponto é conservadora de propósito: só separa quando vem espaço e letra
+maiúscula depois, e ignora abreviações. `Dr. Silva`, `1.500` e `às 14h30.` continuam
+inteiros.
+
+O que o interpretador **não** faz é deduzir data por raciocínio: em "antes preciso
+preparar os slides", ele não conclui que a preparação vem antes do culto. O item é
+criado sem data e você resolve com um toque na confirmação.
 
 ---
 
@@ -165,10 +202,23 @@ js/
   views/                Uma tela por arquivo
 ```
 
-### Dados no IndexedDB (`rotina`)
+### Dados no IndexedDB (`rotina`, versão 2)
 
 `tasks`, `events`, `logs`, `notes`, `inbox`, `categories`, `days`,
-`occurrences` (ocorrências de itens recorrentes), `reminders`, `settings`.
+`occurrences` (ocorrências de itens recorrentes), `reminders`, `settings`,
+`people`, `places`, `moments`, `checkins`.
+
+`people` e `places` são registros de **identidade**, não de contagem: guardam quem e
+onde existe, com a primeira e a última aparição. "João", "joão" e "JOÃO" viram a
+mesma pessoa, porque a chave é o nome sem acento e em minúsculas. São preenchidos
+sozinhos sempre que uma tarefa, compromisso ou registro é salvo.
+
+`moments` e `checkins` já existem no esquema, mas ainda não têm tela — ver
+`ROADMAP.md`, fases 6 e 7.
+
+Ao abrir o app pela primeira vez depois da atualização, a migração para a versão 2
+roda sozinha e **semeia pessoas e lugares a partir de tudo que já estava escrito**,
+sem precisar digitar nada de novo. Ela é idempotente: rodar de novo não duplica.
 
 Itens recorrentes guardam **uma regra**, e as ocorrências são geradas na hora;
 só as que mudam de status ficam gravadas em `occurrences`.

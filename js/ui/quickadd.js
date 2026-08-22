@@ -380,4 +380,103 @@ export function quickLog(onDone) {
   });
 }
 
+/* ------------------------------------------- "Fiz agora": captura em 1 toque
+   Grava o que aconteceu com a hora atual e nada mais: sem categoria, sem
+   pessoa, sem local. Pedir organização neste momento é exatamente o atrito
+   que faz a pessoa deixar de registrar — a triagem acontece depois, na tela
+   Hoje. O texto é guardado como foi dito, sem passar pelo interpretador. */
+export function instantLog(onDone) {
+  const ta = el('textarea', {
+    class: 'textarea', style: { minHeight: '96px' },
+    placeholder: 'O que você acabou de fazer?',
+  });
+  const hint = el('p', { class: 'tiny dim' },
+    `Vai entrar na linha do tempo às ${nowTime()}. Você organiza depois, se quiser.`);
+
+  let rec = null;
+  const mic = Speech.supported()
+    ? el('button', { type: 'button', class: 'btn btn--ghost btn--block' }, icon('mic'), 'Ditar')
+    : null;
+
+  function setMic(on) {
+    if (!mic) return;
+    mic.classList.toggle('btn--primary', on);
+    mic.lastChild.textContent = on ? 'Parar de ditar' : 'Ditar';
+  }
+  if (mic) mic.onclick = () => {
+    if (rec) { rec.stop(); return; }
+    rec = Speech.createRecognizer({
+      onPartial: t => { ta.value = t; },
+      onFinal: t => { if (t) ta.value = t; },
+      onEnd: () => { rec = null; setMic(false); },
+      onError: e => { err(e === 'not-allowed' ? 'Microfone bloqueado.' : 'Erro no microfone.'); },
+    });
+    rec.start();
+    setMic(true);
+  };
+
+  async function save() {
+    rec?.stop(); rec = null;
+    const text = ta.value.trim();
+    if (!text) { err('Escreva ou dite o que você fez.'); return; }
+    const saved = await S.logs.save(S.newLog({
+      text, date: today(), time: nowTime(), source: 'rapido', triaged: false,
+    }));
+    close();
+    onDone?.();
+    toast(`${saved.time} — ${text.length > 42 ? text.slice(0, 42) + '…' : text}`, {
+      action: 'desfazer', timeout: 5200,
+      onAction: async () => { await S.logs.remove(saved.id); onDone?.(); },
+    });
+  }
+
+  const { close } = openSheet({
+    title: 'Fiz agora',
+    body: el('div', {}, field(null, ta), mic, hint),
+    foot: [el('button', { class: 'btn btn--primary btn--block', onclick: save }, icon('check'), 'Registrar')],
+    onClose: () => rec?.abort(),
+  });
+}
+
+/* ------------------------------------------------------ triagem do registro
+   Segundo momento do "capturar agora, organizar depois": aqui sim aparecem
+   categoria, pessoas e local — e "Deixar assim" é uma saída legítima. */
+export function triageLog(log, onDone) {
+  const cat = categoryPicker(log.categoryId || S.categories.guess(log.text));
+  const who = el('input', {
+    class: 'input', placeholder: 'Com quem?',
+    value: (log.people?.length ? log.people : (log.person ? [log.person] : [])).join(', '),
+  });
+  const where = el('input', { class: 'input', placeholder: 'Onde?', value: log.place || '' });
+  const time = el('input', { class: 'input', type: 'time', value: log.time || nowTime() });
+
+  const finish = async patch => {
+    await S.logs.save({ ...log, ...patch, triaged: true });
+    close(); onDone?.();
+  };
+
+  const { close } = openSheet({
+    title: 'Organizar registro',
+    body: el('div', {},
+      el('p', { class: 'strong', style: { marginBottom: '2px' } }, log.text),
+      el('p', { class: 'tiny dim', style: { marginBottom: '12px' } }, `Registrado às ${log.time}`),
+      field('Categoria', cat.node),
+      el('div', { class: 'grid2' }, field('Pessoas', who), field('Local', where)),
+      field('Horário', time),
+      el('p', { class: 'tiny dim' }, 'Nada aqui é obrigatório.')),
+    foot: [
+      el('button', { class: 'btn btn--ghost', onclick: () => finish({}) }, 'Deixar assim'),
+      el('button', {
+        class: 'btn btn--primary grow',
+        onclick: () => finish({
+          categoryId: cat.get?.() ?? log.categoryId ?? null,
+          people: who.value.split(',').map(x => x.trim()).filter(Boolean),
+          place: where.value.trim(),
+          time: time.value || log.time,
+        }),
+      }, 'Salvar'),
+    ],
+  });
+}
+
 export { fmtDate, toast };

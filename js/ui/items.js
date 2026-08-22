@@ -102,7 +102,8 @@ export function eventItem(e, { onChange, showDate = true } = {}) {
 export function logItem(l, { onChange } = {}) {
   const cat = S.categories.get(l.categoryId);
   const meta = el('div', { class: 'item__meta' });
-  if (l.person) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('people', 'ic--sm'), l.person));
+  const who = l.people?.length ? l.people.join(', ') : l.person;
+  if (who) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('people', 'ic--sm'), who));
   if (l.place) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('pin', 'ic--sm'), l.place));
   if (cat) meta.appendChild(el('span', { class: 'chip', style: { background: cat.color + '22', color: cat.color, padding: '1px 7px', fontSize: '11px' } }, `${cat.icon} ${cat.name}`));
   (l.tags || []).forEach(t => meta.appendChild(el('span', { class: 'pill' }, '#' + t)));
