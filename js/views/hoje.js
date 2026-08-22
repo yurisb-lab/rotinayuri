@@ -7,19 +7,32 @@ import { openTextCapture, openVoiceCapture, openInboxCapture, instantLog, triage
 import { editTask, editEvent } from '../ui/forms.js';
 import { today, fmtDate, addDays, DOW, fmtRelative, nowTime } from '../util/date.js';
 import { go } from '../core/router.js';
+import * as Checkins from '../features/checkins.js';
+import { resumoCurto } from '../features/summary.js';
 
 export const title = 'Hoje';
 
 export async function render(root, { refresh }) {
   const d = today();
-  const [stats, overdue, upcoming, notes, pendingInbox, untriaged] = await Promise.all([
+  const [stats, overdue, upcoming, notes, pendingInbox, untriaged, onde] = await Promise.all([
     S.dayStats(d),
     S.tasks.overdue(d),
     S.events.upcoming(14, addDays(d, 1)),
     S.notes.recent(4),
     S.inbox.pending(),
     S.logs.untriaged(),
+    S.whereAmI(d),
   ]);
+  const [mostraHumor, nudges] = await Promise.all([
+    Checkins.mostrarFaixa(d).catch(() => false),
+    S.peopleToNudge(d).catch(() => []),
+  ]);
+  /* "Você lembra?" — só de manhã, só uma vez por dia, só se ontem teve algo.
+     Transforma o registro em percepção, em vez de armazenamento. */
+  const ontem = addDays(d, -1);
+  const jaMostrou = S.settings.get('lastRecallShown') === d;
+  const recall = (!jaMostrou && new Date().getHours() < 12)
+    ? await resumoCurto(ontem).catch(() => null) : null;
 
   clear(root);
 
@@ -37,6 +50,48 @@ export async function render(root, { refresh }) {
         stat(stats.logCount, 'registros'),
       )),
   ));
+
+  /* Você lembra? (fase 6) ------------------------------------------------ */
+  if (recall) {
+    root.appendChild(el('section', { class: 'card', style: { marginBottom: '14px' } },
+      el('div', { class: 'row row--between' },
+        el('h3', { style: { margin: 0, fontSize: '15px' } }, 'Ontem'),
+        el('button', {
+          class: 'topbar__btn', 'aria-label': 'Dispensar',
+          onclick: async () => { await S.settings.set('lastRecallShown', d); refresh(); },
+        }, icon('close'))),
+      el('p', { class: 'small', style: { margin: '6px 0 0' } }, recall.contagem),
+      recall.detalhe ? el('p', { class: 'small muted', style: { margin: '2px 0 0' } }, recall.detalhe) : null,
+      el('button', {
+        class: 'btn btn--ghost btn--block', style: { marginTop: '10px' },
+        onclick: async () => {
+          await S.settings.set('lastRecallShown', d);
+          go(`#/registro?d=${ontem}`);
+        },
+      }, 'Revisar em 1 min')));
+  }
+
+  /* Onde estou no meu dia (fase 4) -------------------------------------- */
+  root.appendChild(ondeEstou(onde, refresh));
+
+  /* Como está seu dia? (fase 7) ----------------------------------------- */
+  if (mostraHumor) root.appendChild(faixaHumor(refresh));
+
+  /* Faz tempo que você não fala com… (fase 5) ---------------------------- */
+  for (const { p, dias } of nudges) {
+    root.appendChild(el('div', { class: 'nudge', style: { marginBottom: '10px' } },
+      el('div', { class: 'avatar' }, (p.name[0] || '?').toUpperCase()),
+      el('div', { class: 'nudge__t grow' },
+        `Faz ${dias} dias que você não registra contato com `, el('b', {}, p.name), '.'),
+      el('button', { class: 'btn btn--sm', onclick: () => go(`#/pessoas?id=${p.id}`) }, 'Abrir'),
+      el('button', {
+        class: 'btn btn--sm btn--ghost',
+        onclick: async () => {
+          await S.people.save({ ...p, snoozeUntil: addDays(d, 7) });
+          refresh();
+        },
+      }, 'Agora não')));
+  }
 
   /* Ações rápidas ----------------------------------------------------- */
   root.appendChild(el('div', { class: 'quickbar' },
@@ -139,10 +194,64 @@ export async function render(root, { refresh }) {
   root.appendChild(el('button', {
     class: 'btn btn--primary btn--block', style: { marginTop: '10px' },
     onclick: () => go('#/registro?fechar=1'),
-  }, icon('moon'), 'Fechar meu dia'));
+  }, icon('moon'), 'Perceber meu dia'));
 
   root.appendChild(el('p', { class: 'tiny dim center', style: { marginTop: '14px' } },
     `Atualizado às ${nowTime()} · ${fmtRelative(d)}`));
+}
+
+/* Cartão "onde estou agora". Tudo derivado — nenhum dado novo no banco.
+   O texto nunca cobra: um dia vazio é um dia vazio, não uma falha. */
+function ondeEstou(o, refresh) {
+  const linha = (rot, valor, sub) => el('div', { class: 'now__row' },
+    el('span', { class: 'now__k' }, rot),
+    el('span', { class: 'now__v' }, valor, sub ? el('small', {}, sub) : null));
+
+  const box = el('section', { class: 'now' });
+  box.appendChild(el('div', { class: 'now__head' },
+    el('span', {}, 'Agora'),
+    el('b', {}, o.agora)));
+
+  if (o.ultimo) {
+    box.appendChild(linha('Última coisa registrada', o.ultimo.text, o.ultimo.time));
+  } else {
+    box.appendChild(el('div', { class: 'now__empty' },
+      el('span', {}, 'Seu dia ainda não tem registros.'),
+      el('button', { class: 'btn btn--sm btn--primary', onclick: () => instantLog(refresh) }, 'Fiz agora')));
+  }
+
+  if (o.proximo) {
+    box.appendChild(linha('Próxima coisa', o.proximo.title, o.proximo.time));
+  } else if (o.atrasado) {
+    box.appendChild(linha('Ainda em aberto', o.atrasado.title, `estava para ${o.atrasado.time}`));
+  } else if (o.amanha) {
+    box.appendChild(linha('Amanhã começa com', o.amanha.title, o.amanha.time));
+  } else {
+    box.appendChild(linha('Próxima coisa', 'Nada mais marcado para hoje.'));
+  }
+
+  if (o.registros) {
+    box.appendChild(el('p', { class: 'now__foot' },
+      `Hoje você já registrou ${o.registros} ${o.registros === 1 ? 'acontecimento' : 'acontecimentos'}.`));
+  }
+  return box;
+}
+
+/* Uma pergunta, resposta de um toque, e some. O "por quê?" nunca é exigido. */
+function faixaHumor(refresh) {
+  const box = el('section', { class: 'card', style: { marginBottom: '14px' } },
+    el('h3', { style: { margin: 0, fontSize: '15px' } }, 'Como está seu dia até aqui?'));
+  const barra = el('div', { class: 'moodbar' });
+  for (const [k, v] of Object.entries(S.MOODS)) {
+    barra.appendChild(el('button', {
+      onclick: async () => {
+        await Checkins.registrar(k, { trigger: 'manual' });
+        refresh();
+      },
+    }, el('b', {}, v.icon), el('span', {}, v.label)));
+  }
+  box.appendChild(barra);
+  return box;
 }
 
 function stat(value, label) {

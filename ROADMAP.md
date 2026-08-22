@@ -4,7 +4,8 @@
 > com a ordem por dificuldade e os seis blocos de implementação, está em
 > [`docs/fases-3-11.md`](docs/fases-3-11.md).
 >
-> Fases 0, 1 e 2 implementadas. A contagem de adiamentos da fase 3 foi
+> Fases 0 a 11 implementadas, exceto 9b e 10 (a camada de IA e a memória
+> consultável). Blocos A, B, C e D concluídos. A contagem de adiamentos da fase 3 foi
 > antecipada, porque sem ela o dado dos meses seguintes não existiria. As fases 3 a 11
 > continuam abertas.
 

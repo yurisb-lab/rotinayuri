@@ -126,6 +126,9 @@ decidir que não quer isso, é o único bloco que dá para descartar inteiro sem
 
 ---
 
+> **Estado:** blocos A, B, C e D implementados — fases 3, 4, 5, 6, 7, 8, 9a e 11.
+> Faltam o bloco E (fase 10a, memória consultável) e o bloco F (9b e 10b, IA).
+>
 > As fases abaixo seguem em **ordem numérica**, não na ordem dos blocos — é mais fácil
 > encontrar "fase 7" procurando por 7. A ordem de execução é a das tabelas acima.
 

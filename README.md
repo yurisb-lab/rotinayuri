@@ -10,7 +10,9 @@ planejamento. Funciona offline, instala no celular e **guarda tudo apenas no seu
 - Todos os dados ficam no **IndexedDB** do navegador.
 - Backup e restauração por arquivo **JSON**.
 
-O plano de evolução do app está em [`ROADMAP.md`](ROADMAP.md).
+O plano de evolução do app está em [`ROADMAP.md`](ROADMAP.md), o detalhamento das
+fases em [`docs/fases-3-11.md`](docs/fases-3-11.md) e a preparação para
+sincronizar entre aparelhos em [`docs/sincronizacao.md`](docs/sincronizacao.md).
 
 ---
 
@@ -46,6 +48,10 @@ Depois de instalado, o app abre e funciona sem internet.
 | **Registro do dia** | "O que fiz hoje", linha do tempo do dia e fechamento com resumo. |
 | **Notas** | Nota simples, lista, ideia, estudo, ata de reunião, rascunho. |
 | **Entrada** | Captura rápida do que surge no dia, para organizar depois. |
+| **Minha semana** | Onde a semana foi parar: categorias, acontecimentos por dia, realizações e pendências. |
+| **Retrospectiva** | Mês, trimestre e ano, com pessoas e lugares mais presentes. |
+| **Pessoas** | Com quem você tem falado, histórico de interações e próxima ação. |
+| **Lugares** | Onde você tem estado e o trajeto do dia. |
 | **Mais** | Painel (dashboard), Histórico, Categorias, Dados/Backup e Configurações. |
 
 ---
@@ -149,6 +155,20 @@ criado sem data e você resolve com um toque na confirmação.
   registros, progresso semanal e distribuição por categoria.
 - **Backup**: exportar/importar JSON, restaurar (substituindo tudo), apagar tudo,
   além de exportar registros e tarefas em CSV e a agenda em `.ics`.
+- **Onde estou no meu dia**: cartão no topo de Hoje com a última coisa registrada,
+  a próxima coisa e quantos acontecimentos o dia já teve.
+- **Planejado × Aconteceu**: a linha do tempo separa o que estava previsto do que
+  foi registrado, e marca o que aconteceu **fora do plano**. O selo é tocável — a
+  sua correção vence o automático para sempre.
+- **Momentos**: o que valeu a pena perceber, que não é tarefa nem registro.
+- **Perceber meu dia**: o fechamento virou cinco passos curtos, todos puláveis, com
+  "Não lembro" em todos eles.
+- **Check-ins**: em horários que você escolhe, uma pergunta de um toque sobre como
+  está o dia. Desligado por padrão — e se dois avisos seguidos forem ignorados, o
+  app para de perguntar sozinho.
+- **Resumo do dia**: cada dia ganha um texto em prosa, montado localmente, sem IA e
+  sem rede. Mesma data, mesmo texto, sempre.
+- **Você lembra?**: de manhã, um cartão com o resumo de ontem e um atalho para revisar.
 
 ### Leitura de prints/imagens
 
@@ -202,7 +222,7 @@ js/
   views/                Uma tela por arquivo
 ```
 
-### Dados no IndexedDB (`rotina`, versão 2)
+### Dados no IndexedDB (`rotina`, versão 3)
 
 `tasks`, `events`, `logs`, `notes`, `inbox`, `categories`, `days`,
 `occurrences` (ocorrências de itens recorrentes), `reminders`, `settings`,
@@ -216,9 +236,18 @@ sozinhos sempre que uma tarefa, compromisso ou registro é salvo.
 `moments` e `checkins` já existem no esquema, mas ainda não têm tela — ver
 `ROADMAP.md`, fases 6 e 7.
 
-Ao abrir o app pela primeira vez depois da atualização, a migração para a versão 2
-roda sozinha e **semeia pessoas e lugares a partir de tudo que já estava escrito**,
-sem precisar digitar nada de novo. Ela é idempotente: rodar de novo não duplica.
+Ao abrir o app pela primeira vez depois da atualização, a migração roda sozinha e
+**semeia pessoas e lugares a partir de tudo que já estava escrito**, sem precisar
+digitar nada de novo. Ela é idempotente: rodar de novo não duplica.
+
+**Exclusões deixam rastro.** Desde a versão 3, apagar um item marca `deletedAt` em
+vez de remover a linha. Isso é invisível no uso (o app filtra sozinho) e existe
+para que sincronizar entre aparelhos, um dia, não faça itens apagados
+ressuscitarem. Ver [`docs/sincronizacao.md`](docs/sincronizacao.md).
+
+O IndexedDB é um banco de verdade e aguenta anos de uso — vinte registros por dia
+durante dez anos dão cerca de 22 MB. O que ele não faz é sincronizar entre
+aparelhos; é isso, e não capacidade, que um serviço em nuvem resolveria.
 
 Itens recorrentes guardam **uma regra**, e as ocorrências são geradas na hora;
 só as que mudam de status ficam gravadas em `occurrences`.

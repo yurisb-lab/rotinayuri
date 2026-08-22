@@ -13,7 +13,9 @@ export const FORMAT_VERSION = 1;
 
 export async function collect() {
   const data = {};
-  for (const s of STORES) data[s] = await db.getAll(s).catch(() => []);
+  /* inclui os tombstones: um backup que perdesse as exclusões faria itens
+     apagados ressuscitarem ao restaurar em outro aparelho. */
+  for (const s of STORES) data[s] = await db.getAll(s, { includeDeleted: true }).catch(() => []);
   return {
     format: FORMAT,
     version: FORMAT_VERSION,
@@ -62,7 +64,7 @@ export async function importJSON(payload, mode = 'merge') {
     const rows = payload.data[s] || [];
     if (!rows.length) { report[s] = 0; continue; }
     if (mode === 'merge') {
-      const existing = await db.getAll(s);
+      const existing = await db.getAll(s, { includeDeleted: true });
       const key = s === 'days' ? 'date' : s === 'settings' ? 'key' : 'id';
       const have = new Set(existing.map(r => r[key]));
       const add = rows.filter(r => !have.has(r[key]));
