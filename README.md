@@ -27,6 +27,24 @@ python3 -m http.server 8080
 # abra http://localhost:8080
 ```
 
+### Instalando no computador (Windows, Mac, Linux)
+
+Abra o endereço no **Chrome ou Edge** → ícone de instalar na barra de endereço
+(ou menu ⋮ → *Instalar Rotina*). O app passa a abrir em janela própria, sem
+abas nem barra de endereço, e aparece na lista de programas.
+
+Em tela a partir de 1000 px a navegação vira uma **barra lateral** e o conteúdo
+fica numa coluna centralizada — não é o layout de celular esticado.
+
+O Firefox e o Safari não instalam PWA no computador, mas o app funciona
+normalmente neles como página.
+
+> **Atenção:** o computador e o celular são **dois bancos separados**. Cada
+> navegador tem o próprio IndexedDB, então o que você registrar num aparelho não
+> aparece no outro. Hoje a ponte entre eles é o backup: *Mais → Dados e backup →
+> Exportar* num, *Importar* no outro. Sincronização automática ainda não existe —
+> o que já foi preparado para ela está em [`docs/sincronizacao.md`](docs/sincronizacao.md).
+
 ### Instalando no celular (Android / S23 Ultra)
 
 1. Publique a pasta em qualquer hospedagem estática com HTTPS
