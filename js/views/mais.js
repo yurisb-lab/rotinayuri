@@ -16,8 +16,16 @@ export async function render(root) {
   root.appendChild(section('Visões'));
   root.appendChild(el('div', { class: 'card', style: { padding: '4px 12px' } },
     row('chart', 'Painel', 'Números, progresso e categorias', '#/dashboard'),
+    row('calendar', 'Minha semana', 'Onde a semana foi parar', '#/semana'),
+    row('history', 'Retrospectiva', 'Mês, trimestre e ano', '#/retrospectiva'),
     row('history', 'Histórico', 'Dias anteriores e pesquisa', '#/historico'),
     row('search', 'Pesquisa global', 'Tudo em um só lugar', '#/busca'),
+  ));
+
+  root.appendChild(el('div', { style: { marginTop: '20px' } }, section('Minha memória')));
+  root.appendChild(el('div', { class: 'card', style: { padding: '4px 12px' } },
+    row('people', 'Pessoas', 'Com quem você tem falado', '#/pessoas'),
+    row('pin', 'Lugares', 'Onde você tem estado', '#/lugares'),
   ));
 
   root.appendChild(el('div', { style: { marginTop: '20px' } }, section('Organização')));

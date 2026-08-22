@@ -2,7 +2,7 @@
    Estratégia: app shell em cache (cache-first com atualização em segundo plano)
    e navegação com fallback para o index.html. */
 
-const VERSION = 'rotina-v1';
+const VERSION = 'rotina-v4';
 const SHELL = [
   './',
   'index.html',

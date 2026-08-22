@@ -448,14 +448,46 @@ function score({ explicit, time, kind, recurrence, title }) {
   return Math.min(1, Number(s.toFixed(2)));
 }
 
+/* Abreviações que terminam em ponto sem terminar a frase. */
+const ABBR = new Set(['sr','sra','srta','dr','dra','prof','profa','exmo','exma',
+  'av','r','ap','apto','bl','pe','ir','etc','ex','obs','ref','pag','pág','p',
+  'fl','art','nº','no','cel','tel','ltda','jan','fev','mar','abr','mai','jun',
+  'jul','ago','set','out','nov','dez']);
+
+/** Quebra uma linha em frases pelo ponto final, sem cair em armadilhas:
+    exige espaço + maiúscula depois do ponto (então "14h30." e "1.500" ficam
+    inteiros) e ignora abreviações comuns ("Dr. Silva" continua junto). */
+function splitSentences(line) {
+  const out = [];
+  const re = /[.!?]+\s+(?=[A-ZÀ-Ý])/g;
+  let start = 0, m;
+  while ((m = re.exec(line)) !== null) {
+    const before = line.slice(start, m.index);
+    const lastWord = (before.match(/([\wÀ-ÿ]+)$/) || [])[1] || '';
+    if (ABBR.has(lastWord.toLowerCase())) continue;
+    out.push(before);
+    start = m.index + m[0].length;
+  }
+  out.push(line.slice(start));
+  return out.map(x => x.trim()).filter(Boolean);
+}
+
+/* Conectivos de início de frase. Quebrar por ponto passou a produzir trechos
+   como "Depois falei com João", e o "Depois" atrapalhava tanto o título quanto
+   a detecção do tipo. Não removemos quando vem preposição junto ("depois do
+   almoço"), que aí faz parte do sentido. */
+const LEAD = /^(?:depois|logo\s+depois|em\s+seguida|ent[ãa]o|a[íi]|da[íi]|por\s+fim|no\s+final|antes|tamb[ée]m|e)\s+(?!d[aeo]s?\s)/i;
+const stripLead = t => t.replace(LEAD, '');
+
 /** Divide o texto em várias frases e interpreta cada uma. */
 export function parse(raw, opts = {}) {
   const text = String(raw || '').trim();
   if (!text) return [];
   const parts = text
     .split(/\r?\n+/)
+    .flatMap(splitSentences)
     .flatMap(line => line.split(/\s*(?:;|•|•)\s*|(?:\s+e\s+depois\s+)|(?:\s+tamb[ée]m\s+preciso\s+)/i))
-    .map(s => s.trim())
+    .map(s => stripLead(s.trim()).trim())
     .filter(s => s.length > 1);
   const list = (parts.length ? parts : [text]).map(p => parseOne(p, opts)).filter(Boolean);
   return list;

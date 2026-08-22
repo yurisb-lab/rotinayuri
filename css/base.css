@@ -59,6 +59,25 @@ ul{margin:0;padding:0;list-style:none}
 }
 .fab:active{transform:scale(.92)}
 
+/* "Fiz agora": atalho global de registro, visualmente secundário ao "+"
+   para que o botão principal continue sendo o de criar. */
+.fab--log{
+  right:16px;
+  bottom:calc(var(--tabbar-h) + var(--safe-b) + 84px);
+  width:auto;height:44px;border-radius:var(--r-full);
+  padding:0 16px 0 13px;gap:7px;
+  grid-auto-flow:column;align-items:center;
+  background:var(--c-bg-elev);color:var(--c-accent);
+  border:1px solid var(--c-line);
+  box-shadow:var(--c-shadow);
+  font-size:14px;font-weight:600;
+}
+.fab--log span{white-space:nowrap}
+@media (max-width:360px){
+  .fab--log span{display:none}
+  .fab--log{width:48px;padding:0}
+}
+
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:50;
   display:grid;grid-template-columns:repeat(7,1fr);
@@ -87,4 +106,58 @@ ul{margin:0;padding:0;list-style:none}
 @media (min-width:700px){
   .tab{font-size:11px}
   .view{padding-left:var(--sp-5);padding-right:var(--sp-5)}
+}
+
+/* ── Desktop: a barra de abas vira barra lateral ──────────────────────────
+   Em tela larga o app funcionava, mas parecia um app de celular esticado:
+   sete abas espalhadas por 1440 px e 300 px de vazio de cada lado. A partir
+   de 1000 px a navegação sobe para a lateral, que é onde o olho procura num
+   monitor, e a coluna de conteúdo respira. Nada muda no celular.
+
+   O recuo é aplicado no #app inteiro, e não em cada elemento: a .topbar é
+   sticky, então deslocá-la sozinha com `left` não faria efeito nenhum e ela
+   acabaria escondida atrás da barra lateral. */
+@media (min-width:1000px){
+  :root{ --sidebar-w:216px; }
+
+  #app{ padding-left:var(--sidebar-w); }
+
+  .tabbar{
+    top:0;bottom:0;left:0;right:auto;
+    width:var(--sidebar-w);height:100dvh;
+    display:flex;flex-direction:column;gap:2px;
+    padding:calc(12px + var(--safe-t)) 10px calc(12px + var(--safe-b));
+    border-top:0;border-right:1px solid var(--c-line);
+    background:var(--c-bg-elev);
+  }
+  .tab{
+    flex-direction:row;justify-content:flex-start;gap:11px;
+    height:44px;padding:0 12px;border-radius:var(--r-md);
+    font-size:14px;font-weight:600;letter-spacing:0;
+  }
+  .tab .ic{width:19px;height:19px;flex:0 0 auto}
+  .tab:hover{background:var(--c-bg-soft)}
+  .tab.is-active{background:var(--c-accent-soft)}
+  .tab.is-active::before{
+    top:50%;left:0;transform:translateY(-50%);
+    width:3px;height:20px;border-radius:0 4px 4px 0;
+  }
+  .tab__badge{top:50%;right:12px;transform:translateY(-50%)}
+
+  .view{
+    padding-left:var(--sp-6);padding-right:var(--sp-6);
+    padding-bottom:calc(var(--sp-7) + 48px);
+    max-width:900px;margin:0 auto;
+  }
+
+  /* Sem barra inferior, os flutuantes descem e os avisos deixam de
+     flutuar no meio do nada. */
+  .fab{bottom:26px;right:26px}
+  .fab--log{bottom:96px;right:26px}
+  .toasts{left:calc(var(--sidebar-w) + 12px);bottom:26px}
+}
+
+/* Telas muito largas: a coluna para de crescer e fica centralizada. */
+@media (min-width:1500px){
+  .view{max-width:960px}
 }

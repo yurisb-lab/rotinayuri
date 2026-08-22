@@ -85,6 +85,46 @@ export async function render(root, { refresh }) {
 
   /* leitura de imagens --------------------------------------------------- */
   root.appendChild(el('div', { style: { marginTop: '20px' } }, section('Leitura de imagens (opcional)')));
+  /* ------------------------------------------------ check-ins (fase 7) */
+  const ckOn = el('input', { type: 'checkbox', checked: !!s.checkinsEnabled });
+  const ckTimes = el('input', { class: 'input', value: (s.checkinTimes || []).join(', '),
+    placeholder: '08:30, 13:30, 19:30' });
+  const ckMax = el('input', { class: 'input', type: 'number', min: '1', max: '6',
+    value: String(s.checkinMaxPerDay ?? 3) });
+  const ckDe = el('input', { class: 'input', type: 'time', value: s.checkinQuietFrom || '22:00' });
+  const ckAte = el('input', { class: 'input', type: 'time', value: s.checkinQuietTo || '07:00' });
+
+  root.appendChild(el('div', { style: { marginTop: '22px' } }, section('Como está seu dia?')));
+  root.appendChild(el('div', { class: 'card' },
+    el('p', { class: 'small muted' },
+      'Em alguns momentos do dia o app pode perguntar como você está, com resposta de um toque. Fica desligado até você ligar.'),
+    el('label', { class: 'switch', style: { marginTop: '10px' } }, ckOn,
+      el('span', {}, 'Perguntar como está meu dia')),
+    field('Horários', ckTimes),
+    el('div', { class: 'grid2' }, field('No máximo por dia', ckMax), field(' ', el('span'))),
+    el('div', { class: 'grid2' }, field('Não perguntar das', ckDe), field('até', ckAte)),
+    s.checkinsPaused
+      ? el('p', { class: 'tiny', style: { color: 'var(--c-warn)' } },
+          'Os avisos estão pausados porque dois seguidos passaram sem resposta. Responder um humor em Hoje religa sozinho.')
+      : null,
+    el('p', { class: 'tiny dim' },
+      'Se dois avisos seguidos forem ignorados, o app para de perguntar por conta própria. Silêncio também é resposta.'),
+    el('button', {
+      class: 'btn btn--primary btn--block', style: { marginTop: '10px' },
+      onclick: async () => {
+        const horas = ckTimes.value.split(',').map(x => x.trim())
+          .filter(x => /^\d{2}:\d{2}$/.test(x)).sort();
+        await S.settings.set('checkinsEnabled', ckOn.checked);
+        if (horas.length) await S.settings.set('checkinTimes', horas);
+        await S.settings.set('checkinMaxPerDay', Number(ckMax.value) || 3);
+        await S.settings.set('checkinQuietFrom', ckDe.value || '22:00');
+        await S.settings.set('checkinQuietTo', ckAte.value || '07:00');
+        await S.settings.set('checkinsPaused', false);
+        await S.settings.set('checkinIgnored', 0);
+        ok('Preferências salvas');
+      },
+    }, 'Salvar')));
+
   const aiEnabled = el('input', { type: 'checkbox', checked: !!s.aiEnabled });
   const aiEndpoint = el('input', { class: 'input', placeholder: 'https://…', value: s.aiEndpoint || '' });
   const aiKey = el('input', { class: 'input', type: 'password', placeholder: 'Chave (fica só neste aparelho)', value: s.aiKey || '' });

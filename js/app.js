@@ -5,7 +5,8 @@ import * as S from './core/store.js';
 import * as Router from './core/router.js';
 import { on } from './core/bus.js';
 import * as Rem from './features/reminders.js';
-import { openQuickAdd } from './ui/quickadd.js';
+import * as Checkins from './features/checkins.js';
+import { openQuickAdd, instantLog } from './ui/quickadd.js';
 import { closeTop, hasOpen } from './ui/modal.js';
 import { toast } from './ui/toast.js';
 import { applyTheme } from './views/config.js';
@@ -23,10 +24,15 @@ import * as config from './views/config.js';
 import * as dados from './views/dados.js';
 import * as categorias from './views/categorias.js';
 import * as busca from './views/busca.js';
+import * as semana from './views/semana.js';
+import * as pessoas from './views/pessoas.js';
+import * as lugares from './views/lugares.js';
+import * as retrospectiva from './views/retrospectiva.js';
 
 const VIEWS = {
   hoje, tarefas, calendario, registro, notas, entrada, mais,
   dashboard, historico, config, dados, categorias, busca,
+  semana, pessoas, lugares, retrospectiva,
 };
 
 async function boot() {
@@ -47,6 +53,7 @@ async function boot() {
   Router.start();
 
   Rem.start(30000);
+  Checkins.start(300000);
   await updateBadge();
   on('data', updateBadge);
   on('inbox', updateBadge);
@@ -65,6 +72,7 @@ function refreshIfVisible() {
 
 function wireChrome() {
   $('#fab').addEventListener('click', () => openQuickAdd(() => Router.render()));
+  $('#fabLog').addEventListener('click', () => instantLog(() => Router.render()));
   $('#btnSearch').addEventListener('click', () => Router.go('#/busca'));
   $('#btnTheme').addEventListener('click', async () => {
     const order = ['auto', 'light', 'dark'];
@@ -135,7 +143,7 @@ function handleShareTarget() {
   }
   if (action) {
     import('./ui/quickadd.js').then(m => {
-      if (action === 'registrar') m.quickLog(() => Router.render());
+      if (action === 'registrar') m.instantLog(() => Router.render());
       if (action === 'voz') m.openVoiceCapture(() => Router.render());
       if (action === 'texto') m.openTextCapture('', () => Router.render());
       if (action === 'entrada') m.openInboxCapture().then(() => Router.render());

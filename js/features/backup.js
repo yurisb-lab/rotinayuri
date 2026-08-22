@@ -4,15 +4,18 @@
 import * as db from '../core/db.js';
 import { emit } from '../core/bus.js';
 import { nowISO } from '../util/date.js';
-import { settings, init as initStore } from '../core/store.js';
+import { settings, init as initStore, seedRegistries } from '../core/store.js';
 
-const STORES = ['categories', 'tasks', 'events', 'logs', 'notes', 'inbox', 'days', 'occurrences', 'reminders', 'settings'];
+const STORES = ['categories', 'tasks', 'events', 'logs', 'notes', 'inbox', 'days', 'occurrences',
+  'reminders', 'settings', 'people', 'places', 'moments', 'checkins'];
 export const FORMAT = 'rotina-backup';
 export const FORMAT_VERSION = 1;
 
 export async function collect() {
   const data = {};
-  for (const s of STORES) data[s] = await db.getAll(s).catch(() => []);
+  /* inclui os tombstones: um backup que perdesse as exclusões faria itens
+     apagados ressuscitarem ao restaurar em outro aparelho. */
+  for (const s of STORES) data[s] = await db.getAll(s, { includeDeleted: true }).catch(() => []);
   return {
     format: FORMAT,
     version: FORMAT_VERSION,
@@ -61,7 +64,7 @@ export async function importJSON(payload, mode = 'merge') {
     const rows = payload.data[s] || [];
     if (!rows.length) { report[s] = 0; continue; }
     if (mode === 'merge') {
-      const existing = await db.getAll(s);
+      const existing = await db.getAll(s, { includeDeleted: true });
       const key = s === 'days' ? 'date' : s === 'settings' ? 'key' : 'id';
       const have = new Set(existing.map(r => r[key]));
       const add = rows.filter(r => !have.has(r[key]));
@@ -73,6 +76,9 @@ export async function importJSON(payload, mode = 'merge') {
     }
   }
   await initStore();
+  /* Um backup antigo não traz pessoas nem lugares: reconstrói a partir do que
+     foi restaurado, para que a memória não volte vazia. */
+  await seedRegistries().catch(() => {});
   const { rebuildAll } = await import('./reminders.js');
   await rebuildAll();
   emit('data');
@@ -108,7 +114,8 @@ export async function exportLogsCSV(from, to) {
     .filter(l => (!from || l.date >= from) && (!to || l.date <= to))
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   const head = ['data', 'hora', 'registro', 'pessoa', 'local', 'tags'];
-  const body = rows.map(l => [l.date, l.time, l.text, l.person || '', l.place || '', (l.tags || []).join(' ')]
+  const body = rows.map(l => [l.date, l.time, l.text,
+    (l.people?.length ? l.people.join(', ') : l.person || ''), l.place || '', (l.tags || []).join(' ')]
     .map(csv).join(';'));
   return [head.join(';'), ...body].join('\n');
 }

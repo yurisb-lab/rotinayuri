@@ -57,6 +57,7 @@ const TAB_OF = {
   hoje: 'hoje', tarefas: 'tarefas', calendario: 'calendario', registro: 'registro',
   notas: 'notas', entrada: 'entrada', mais: 'mais', config: 'mais', dados: 'mais',
   categorias: 'mais', dashboard: 'mais', historico: 'mais', busca: 'mais',
+  semana: 'mais', pessoas: 'mais', lugares: 'mais', retrospectiva: 'mais',
 };
 
 function highlightTab(name) {
