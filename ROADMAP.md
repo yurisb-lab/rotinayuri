@@ -1,6 +1,10 @@
 # Roteiro — de lista de tarefas a "Minha Memória"
 
-> **Estado:** fases 0, 1 e 2 implementadas. A contagem de adiamentos da fase 3 foi
+> **Estado:** fases 0, 1 e 2 implementadas. O detalhamento técnico das fases 3 a 11,
+> com a ordem por dificuldade e os seis blocos de implementação, está em
+> [`docs/fases-3-11.md`](docs/fases-3-11.md).
+>
+> Fases 0, 1 e 2 implementadas. A contagem de adiamentos da fase 3 foi
 > antecipada, porque sem ela o dado dos meses seguintes não existiria. As fases 3 a 11
 > continuam abertas.
 
