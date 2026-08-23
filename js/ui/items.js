@@ -42,7 +42,7 @@ export function taskItem(t, { onChange, showDate = true } = {}) {
   const meta = el('div', { class: 'item__meta' });
   if (showDate && t.date) meta.appendChild(el('span', { class: late ? 'pill pill--danger' : '' }, fmtRelative(t.date)));
   if (t.time) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('clock', 'ic--sm'), fmtTime(t.time)));
-  if (cat) meta.appendChild(el('span', { class: 'chip', style: { background: cat.color + '22', color: cat.color, padding: '1px 7px', fontSize: '11px' } }, `${cat.icon} ${cat.name}`));
+  if (cat) meta.appendChild(el('span', { class: 'chip chip--cat', style: { '--cat': cat.color } }, `${cat.icon} ${cat.name}`));
   if (t.recurrence) meta.appendChild(el('span', { class: 'pill pill--accent' }, R.describe(t.recurrence, t.date)));
   if (t.priority === 'urgente' || t.priority === 'alta') {
     meta.appendChild(el('span', { class: `pill ${t.priority === 'urgente' ? 'pill--danger' : 'pill--warn'}` }, S.PRIORITIES[t.priority].label));
@@ -74,7 +74,7 @@ export function eventItem(e, { onChange, showDate = true } = {}) {
   if (showDate) meta.appendChild(el('span', {}, fmtRelative(e.date)));
   if (e.location) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('pin', 'ic--sm'), e.location));
   if (e.people?.length) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('people', 'ic--sm'), e.people.join(', ')));
-  if (cat) meta.appendChild(el('span', { class: 'chip', style: { background: cat.color + '22', color: cat.color, padding: '1px 7px', fontSize: '11px' } }, `${cat.icon} ${cat.name}`));
+  if (cat) meta.appendChild(el('span', { class: 'chip chip--cat', style: { '--cat': cat.color } }, `${cat.icon} ${cat.name}`));
   if (e.recurrence) meta.appendChild(el('span', { class: 'pill pill--accent' }, R.describe(e.recurrence, e.date)));
 
   const timeBox = el('div', {
@@ -105,12 +105,12 @@ export function logItem(l, { onChange } = {}) {
   const who = l.people?.length ? l.people.join(', ') : l.person;
   if (who) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('people', 'ic--sm'), who));
   if (l.place) meta.appendChild(el('span', { class: 'row', style: { gap: '3px' } }, icon('pin', 'ic--sm'), l.place));
-  if (cat) meta.appendChild(el('span', { class: 'chip', style: { background: cat.color + '22', color: cat.color, padding: '1px 7px', fontSize: '11px' } }, `${cat.icon} ${cat.name}`));
+  if (cat) meta.appendChild(el('span', { class: 'chip chip--cat', style: { '--cat': cat.color } }, `${cat.icon} ${cat.name}`));
   (l.tags || []).forEach(t => meta.appendChild(el('span', { class: 'pill' }, '#' + t)));
 
   return el('div', {
     class: 'item',
-    style: { '--cat': cat?.color || 'var(--c-warn)' },
+    style: { '--cat': cat?.color || 'var(--c-accent-2)' },
     onclick: async () => { const r = await editLog(l); if (r !== undefined) onChange?.(); },
   },
     el('div', { style: { minWidth: '46px' } },

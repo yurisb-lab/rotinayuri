@@ -87,6 +87,18 @@ function wireChrome() {
     if (e.key === 'Escape' && hasOpen()) { e.preventDefault(); closeTop(); }
   });
 
+  /* Parada no topo, a barra se dissolve no fundo; ao rolar, ela ganha
+     borda e opacidade para separar o cabeçalho do conteúdo. */
+  let scrolled = null;
+  const onScroll = () => {
+    const now = window.scrollY > 4;
+    if (now === scrolled) return;
+    scrolled = now;
+    document.body.classList.toggle('is-scrolled', now);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
   /* Botão voltar do Android fecha a folha aberta antes de sair da tela */
   window.addEventListener('popstate', () => { if (hasOpen()) closeTop(); });
 }
