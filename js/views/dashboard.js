@@ -53,7 +53,7 @@ export async function render(root, { refresh }) {
       const n = dash.perCat[c.id] || 0;
       if (!n) continue;
       bar.appendChild(el('i', { style: { width: `${(n / total) * 100}%`, background: c.color }, title: `${c.name}: ${n}` }));
-      legend.appendChild(el('span', { class: 'chip', style: { background: c.color + '22', color: c.color } },
+      legend.appendChild(el('span', { class: 'chip chip--cat', style: { '--cat': c.color } },
         `${c.icon} ${c.name}`, el('b', { style: { marginLeft: '4px' } }, String(n))));
     }
     const semCat = dash.perCat.sem || 0;

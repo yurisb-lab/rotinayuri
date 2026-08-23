@@ -6,6 +6,7 @@ import { emit } from './bus.js';
 const routes = new Map();
 let current = null;
 let rendering = false;
+let lastName = null;
 
 export function register(name, mod) { routes.set(name, mod); }
 
@@ -40,6 +41,7 @@ export async function render() {
     await mod.render(root, { params, refresh: () => { rendering = false; render(); }, go });
     root.setAttribute('aria-busy', 'false');
     root.scrollTop = 0;
+    animateEntrance(root, name);
     highlightTab(name);
     const isTab = ['hoje','tarefas','calendario','registro','notas','entrada','mais'].includes(name);
     $('#btnMenu').hidden = isTab;
@@ -51,6 +53,17 @@ export async function render() {
   } finally {
     rendering = false;
   }
+}
+
+/* A entrada em cascata é só para troca de tela. Recarregar a lista depois
+   de marcar uma tarefa reusa a mesma tela — e reanimar tudo a cada toque
+   pisca mais do que agrada. */
+function animateEntrance(root, name) {
+  if (name === lastName) return;
+  lastName = name;
+  root.classList.remove('view--in');
+  void root.offsetWidth;          /* reinicia a animação */
+  root.classList.add('view--in');
 }
 
 const TAB_OF = {

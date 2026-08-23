@@ -1,65 +1,204 @@
-/* Design tokens ------------------------------------------------------- */
-:root{
-  --c-bg:#f5f6fa;
-  --c-bg-elev:#ffffff;
-  --c-bg-soft:#eceef5;
-  --c-line:#e0e3ec;
-  --c-line-soft:#eaecf3;
-  --c-text:#151824;
-  --c-text-2:#5b6076;
-  --c-text-3:#878da3;
-  --c-accent:#4f5bd5;
-  --c-accent-soft:#e8e9fb;
-  --c-accent-text:#ffffff;
-  --c-ok:#16a06a;
-  --c-ok-soft:#e2f5ed;
-  --c-warn:#d98218;
-  --c-warn-soft:#fdf1de;
-  --c-danger:#dc3f4c;
-  --c-danger-soft:#fdeaec;
-  --c-info:#2b7fd4;
-  --c-shadow:0 1px 2px rgba(20,24,40,.05), 0 6px 20px rgba(20,24,40,.06);
-  --c-shadow-lg:0 12px 40px rgba(16,20,38,.18);
+/* ═══════════════════════════════════════════════════════════════════════
+   Rotina — sistema visual "Papel & Tinta"
 
-  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-full:999px;
+   A identidade nasce do próprio ciclo do app: planejar → executar →
+   registrar → revisar. Por isso a marca tem DUAS cores, e cada uma quer
+   dizer uma coisa:
+
+     · índigo  (--c-accent)   = o plano — o que ainda vai acontecer
+     · âmbar   (--c-accent-2) = o vivido — o que já aconteceu e virou registro
+
+   O fundo claro é papel morno, não cinza de escritório. O escuro é tinta
+   noturna com um fio de violeta, não preto de terminal. Nada aqui é
+   "chapado": tudo tem camada, textura e uma sombra que corresponde à
+   altura em que o elemento está.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── Marca ───────────────────────────────────────────────────────── */
+  --c-accent:#5b46d9;
+  --c-accent-strong:#4834c4;
+  --c-accent-soft:#ebe7fd;
+  --c-accent-line:#d7cffb;
+  --c-accent-text:#ffffff;
+
+  --c-accent-2:#bd5a26;
+  --c-accent-2-soft:#fbeade;
+  --c-accent-2-line:#f2d4bd;
+
+  /* Painel do dia: as mesmas três paradas do ícone do app. Ficam fora de
+     --c-accent porque no escuro o índigo clareia (para contrastar com a
+     tinta) e o painel precisa ir no sentido contrário — ficar mais fundo. */
+  --hero-a:#7f68f2;
+  --hero-b:#5b46d9;
+  --hero-c:#33207c;
+  --hero-warm:62%;
+
+  /* ── Superfícies (papel) ─────────────────────────────────────────── */
+  --c-bg:#f6f4f0;
+  --c-bg-elev:#fffefb;
+  --c-bg-elev-2:#ffffff;
+  --c-bg-soft:#ece8e1;
+  --c-bg-sunken:#edeae4;
+  --c-line:#e2dcd2;
+  --c-line-soft:#ece8e0;
+
+  /* ── Tinta ───────────────────────────────────────────────────────── */
+  --c-text:#211d29;
+  --c-text-2:#5d5768;
+  --c-text-3:#8d8799;
+
+  /* ── Sinais ──────────────────────────────────────────────────────── */
+  --c-ok:#0f8f63;      --c-ok-soft:#e0f4ec;
+  --c-warn:#a9741a;    --c-warn-soft:#fbf0da;
+  --c-danger:#cf3b45;  --c-danger-soft:#fdeaeb;
+  --c-info:#2472c8;    --c-info-soft:#e4effc;
+
+  /* ── Profundidade ────────────────────────────────────────────────
+     Três alturas, não uma sombra genérica repetida. Cada nível soma um
+     contorno de luz + uma sombra curta (contato) + uma longa (ambiente). */
+  --e-1:
+    0 1px 1px rgba(38,28,58,.04),
+    0 2px 6px -2px rgba(38,28,58,.06);
+  --e-2:
+    0 1px 2px rgba(38,28,58,.05),
+    0 4px 10px -3px rgba(38,28,58,.07),
+    0 14px 28px -12px rgba(38,28,58,.10);
+  --e-3:
+    0 2px 4px rgba(38,28,58,.07),
+    0 12px 24px -8px rgba(38,28,58,.13),
+    0 32px 64px -20px rgba(38,28,58,.22);
+  --e-glow:0 8px 22px -6px color-mix(in srgb, var(--c-accent) 48%, transparent);
+
+  /* Compatibilidade com o nome antigo */
+  --c-shadow:var(--e-2);
+  --c-shadow-lg:var(--e-3);
+
+  /* Brilho de topo que dá volume às superfícies claras */
+  --sheen:inset 0 1px 0 rgba(255,255,255,.7);
+
+  /* ── Forma ───────────────────────────────────────────────────────── */
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-xl:26px; --r-full:999px;
+
+  /* ── Ritmo ───────────────────────────────────────────────────────── */
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:26px; --sp-7:34px;
-  --tabbar-h:62px;
-  --topbar-h:54px;
+
+  /* ── Tipografia ──────────────────────────────────────────────────── */
+  --font:"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-num:"Plus Jakarta Sans", ui-monospace, "SF Mono", monospace;
+
+  --fs-1:11.5px; --fs-2:12.5px; --fs-3:13.5px; --fs-4:15px;
+  --fs-5:17px;   --fs-6:20px;   --fs-7:26px;   --fs-8:34px;
+
+  /* ── Movimento ───────────────────────────────────────────────────── */
+  --ease:cubic-bezier(.2,.8,.3,1);
+  --ease-spring:cubic-bezier(.34,1.4,.64,1);
+  --t-fast:.14s; --t-med:.24s; --t-slow:.4s;
+
+  /* ── Estrutura ───────────────────────────────────────────────────── */
+  --tabbar-h:66px;
+  --topbar-h:56px;
   --safe-b:env(safe-area-inset-bottom, 0px);
   --safe-t:env(safe-area-inset-top, 0px);
-  --font:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
-:root[data-theme="dark"]{
-  --c-bg:#0f1115;
-  --c-bg-elev:#171a21;
-  --c-bg-soft:#1f232c;
-  --c-line:#282d38;
-  --c-line-soft:#212630;
-  --c-text:#eceef5;
-  --c-text-2:#a3aabd;
-  --c-text-3:#767d92;
-  --c-accent:#8b93ff;
-  --c-accent-soft:#232741;
-  --c-accent-text:#0f1115;
-  --c-ok:#3ecf9a;
-  --c-ok-soft:#16332a;
-  --c-warn:#e8a94b;
-  --c-warn-soft:#33290f;
-  --c-danger:#ff6b76;
-  --c-danger-soft:#3a1c20;
-  --c-info:#63b0f5;
-  --c-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
-  --c-shadow-lg:0 16px 48px rgba(0,0,0,.55);
+
+/* ═══════════════════════════ Tinta noturna ══════════════════════════ */
+[data-theme="dark"]{
+  --c-accent:#a794ff;
+  --c-accent-strong:#b9abff;
+  --c-accent-soft:#272049;
+  --c-accent-line:#3a2f68;
+  --c-accent-text:#141020;
+
+  --c-accent-2:#f0a06a;
+  --c-accent-2-soft:#3a2418;
+  --c-accent-2-line:#54341f;
+
+  --hero-a:#6b57d8;
+  --hero-b:#43309e;
+  --hero-c:#221650;
+  --hero-warm:40%;
+
+  --c-bg:#131118;
+  --c-bg-elev:#1c1a25;
+  --c-bg-elev-2:#221f2d;
+  --c-bg-soft:#272332;
+  --c-bg-sunken:#0e0c13;
+  --c-line:#332e42;
+  --c-line-soft:#272232;
+
+  --c-text:#ece9f3;
+  --c-text-2:#a9a2bd;
+  --c-text-3:#7d7692;
+
+  --c-ok:#45d7a0;      --c-ok-soft:#123529;
+  --c-warn:#e3aa52;    --c-warn-soft:#372a12;
+  --c-danger:#ff707d;  --c-danger-soft:#3d1a20;
+  --c-info:#6bb4f7;    --c-info-soft:#122a42;
+
+  --e-1:
+    0 1px 1px rgba(0,0,0,.3),
+    0 2px 6px -2px rgba(0,0,0,.35);
+  --e-2:
+    0 1px 2px rgba(0,0,0,.35),
+    0 4px 10px -3px rgba(0,0,0,.4),
+    0 14px 28px -12px rgba(0,0,0,.5);
+  --e-3:
+    0 2px 4px rgba(0,0,0,.4),
+    0 12px 24px -8px rgba(0,0,0,.5),
+    0 32px 64px -20px rgba(0,0,0,.7);
+  --e-glow:0 8px 26px -6px color-mix(in srgb, var(--c-accent) 40%, transparent);
+  --sheen:inset 0 1px 0 rgba(255,255,255,.045);
 }
+
+/* O mesmo tema escuro quando o sistema pede e o usuário não escolheu. */
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --c-bg:#0f1115; --c-bg-elev:#171a21; --c-bg-soft:#1f232c;
-    --c-line:#282d38; --c-line-soft:#212630;
-    --c-text:#eceef5; --c-text-2:#a3aabd; --c-text-3:#767d92;
-    --c-accent:#8b93ff; --c-accent-soft:#232741; --c-accent-text:#0f1115;
-    --c-ok:#3ecf9a; --c-ok-soft:#16332a; --c-warn:#e8a94b; --c-warn-soft:#33290f;
-    --c-danger:#ff6b76; --c-danger-soft:#3a1c20; --c-info:#63b0f5;
-    --c-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
-    --c-shadow-lg:0 16px 48px rgba(0,0,0,.55);
+    --c-accent:#a794ff;
+    --c-accent-strong:#b9abff;
+    --c-accent-soft:#272049;
+    --c-accent-line:#3a2f68;
+    --c-accent-text:#141020;
+
+    --c-accent-2:#f0a06a;
+    --c-accent-2-soft:#3a2418;
+    --c-accent-2-line:#54341f;
+
+    --hero-a:#6b57d8;
+    --hero-b:#43309e;
+    --hero-c:#221650;
+    --hero-warm:40%;
+
+    --c-bg:#131118;
+    --c-bg-elev:#1c1a25;
+    --c-bg-elev-2:#221f2d;
+    --c-bg-soft:#272332;
+    --c-bg-sunken:#0e0c13;
+    --c-line:#332e42;
+    --c-line-soft:#272232;
+
+    --c-text:#ece9f3;
+    --c-text-2:#a9a2bd;
+    --c-text-3:#7d7692;
+
+    --c-ok:#45d7a0;      --c-ok-soft:#123529;
+    --c-warn:#e3aa52;    --c-warn-soft:#372a12;
+    --c-danger:#ff707d;  --c-danger-soft:#3d1a20;
+    --c-info:#6bb4f7;    --c-info-soft:#122a42;
+
+    --e-1:
+      0 1px 1px rgba(0,0,0,.3),
+      0 2px 6px -2px rgba(0,0,0,.35);
+    --e-2:
+      0 1px 2px rgba(0,0,0,.35),
+      0 4px 10px -3px rgba(0,0,0,.4),
+      0 14px 28px -12px rgba(0,0,0,.5);
+    --e-3:
+      0 2px 4px rgba(0,0,0,.4),
+      0 12px 24px -8px rgba(0,0,0,.5),
+      0 32px 64px -20px rgba(0,0,0,.7);
+    --e-glow:0 8px 26px -6px color-mix(in srgb, var(--c-accent) 40%, transparent);
+    --sheen:inset 0 1px 0 rgba(255,255,255,.045);
   }
 }

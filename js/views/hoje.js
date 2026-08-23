@@ -108,7 +108,7 @@ export async function render(root, { refresh }) {
       el('p', { class: 'tiny dim', style: { marginTop: '-6px', marginBottom: '10px' } },
         'Capturados no "Fiz agora". Um toque para dar categoria, pessoa e local — ou deixe como está.'),
       el('div', { class: 'stack' }, ...untriaged.slice(0, 8).map(l =>
-        el('div', { class: 'item', style: { '--cat': 'var(--c-warn)' }, onclick: () => triageLog(l, refresh) },
+        el('div', { class: 'item', style: { '--cat': 'var(--c-accent-2)' }, onclick: () => triageLog(l, refresh) },
           el('div', { style: { minWidth: '46px' } },
             el('b', { style: { fontVariantNumeric: 'tabular-nums' } }, l.time || ''),
             l.date !== d ? el('div', { class: 'tiny dim' }, fmtDate(l.date, 'num')) : null),

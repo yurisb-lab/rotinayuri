@@ -73,7 +73,7 @@ export async function render(root, { params, refresh }) {
     box.appendChild(el('div', { style: { marginTop: '16px' } }, section('Categorias')));
     box.appendChild(el('div', { class: 'wrap' }, ...S.categories.all().map(c =>
       el('button', {
-        class: 'chip', style: { background: c.color + '22', color: c.color },
+        class: 'chip chip--cat', style: { '--cat': c.color },
         onclick: () => { input.value = c.name; state.q = c.name; draw(); },
       }, `${c.icon} ${c.name}`))));
     if (!people.length && !places.length) {

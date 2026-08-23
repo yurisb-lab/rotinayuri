@@ -200,14 +200,62 @@ os dados continuam sendo salvos apenas localmente.
 
 ---
 
+## Identidade visual
+
+O app tem um sistema visual próprio, chamado **Papel & Tinta**, e ele não é
+decoração solta: sai do próprio ciclo do app — *planejar → executar →
+registrar → revisar*.
+
+### Duas cores, dois significados
+
+| Cor                       | Quer dizer            | Onde aparece                                                   |
+|---------------------------|-----------------------|----------------------------------------------------------------|
+| **Índigo** `--c-accent`   | o plano, o que vem    | tarefas, compromissos, o botão "+", abas, faixa "planejado"     |
+| **Âmbar** `--c-accent-2`  | o vivido, o registro  | "Fiz agora", registros do dia, faixa "fora do plano"            |
+
+Por isso o botão de criar e o botão de registrar têm cores diferentes: eles
+fazem coisas diferentes no ciclo. O cartão "Agora", que liga as duas pontas,
+tem uma régua no topo que vai de uma cor à outra.
+
+### Papel e tinta
+
+O tema claro é papel morno (`#f6f4f0`), não cinza de escritório; o escuro é
+tinta noturna com um fio de violeta, não preto de terminal. O fundo tem duas
+manchas de luz nas cores da marca e um grão fino por cima — dois
+pseudo-elementos fixos atrás do conteúdo, sem imagem nenhuma na rede.
+
+Profundidade é um sistema de três alturas (`--e-1`, `--e-2`, `--e-3`), cada
+uma somando um contorno de luz, uma sombra de contato e uma de ambiente. Nada
+usa "uma sombra genérica" repetida.
+
+### Tipos
+
+- **Fraunces** nos títulos, na saudação do dia e no resumo do dia (com
+  capitular) — é ela que dá cara de caderno.
+- **Plus Jakarta Sans** em todo o resto, com numerais tabulares em horas e
+  contagens.
+
+As duas ficam em `fonts/`, não em CDN: o app é offline-first e instalável.
+Detalhes e licenças em [`fonts/LEIAME.md`](fonts/LEIAME.md).
+
+### Movimento
+
+A entrada em cascata acontece **só ao trocar de tela** — recarregar a lista
+depois de marcar uma tarefa não reanima nada, porque piscar a cada toque
+incomoda mais do que agrada. Quem liga *reduzir movimento* no sistema recebe
+o app praticamente sem animação.
+
 ## Estrutura do projeto
 
 ```
 index.html              Casca do app (topo, navegação, sprite de ícones)
 manifest.webmanifest    Manifesto da PWA (atalhos e share target)
 sw.js                   Service worker (cache do app shell, offline)
+fonts/
+  fraunces-latin.woff2  Fraunces (títulos) — ver fonts/LEIAME.md
+  jakarta-latin.woff2   Plus Jakarta Sans (texto)
 css/
-  tokens.css            Cores, espaçamentos, tema claro/escuro
+  tokens.css            Cores, formas, tipos, sombras, movimento; claro/escuro
   base.css              Reset e layout geral
   components.css        Botões, cards, chips, formulários, folhas modais
   views.css             Estilos específicos das telas

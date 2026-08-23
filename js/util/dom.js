@@ -5,7 +5,7 @@ export function el(tag, props = {}, ...children) {
   for (const [k, v] of Object.entries(props || {})) {
     if (v === null || v === undefined || v === false) continue;
     if (k === 'class') node.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+    else if (k === 'style' && typeof v === 'object') setStyle(node, v);
     else if (k === 'html') node.innerHTML = v;
     else if (k === 'dataset') Object.assign(node.dataset, v);
     else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
@@ -14,6 +14,16 @@ export function el(tag, props = {}, ...children) {
   }
   append(node, children);
   return node;
+}
+/* Custom properties (--cat, --dot, --p) precisam de setProperty: passá-las
+   por Object.assign vira uma propriedade JS solta e o navegador ignora — foi
+   por isso que as cores de categoria nunca apareceram. */
+function setStyle(node, styles) {
+  for (const [k, v] of Object.entries(styles)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k.startsWith('--')) node.style.setProperty(k, String(v));
+    else node.style[k] = v;
+  }
 }
 function append(node, children) {
   for (const c of children.flat(4)) {
