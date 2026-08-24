@@ -17,7 +17,9 @@ dois aparelhos. O repositório já traz o fluxo do GitHub Pages
 
 1. No GitHub, vá em **Settings → Pages**.
 2. Em *Build and deployment → Source*, escolha **GitHub Actions**.
-3. Faça um push na `main` (ou rode o fluxo à mão em *Actions → Publicar no GitHub Pages*).
+3. Faça um push no branch padrão do repositório (ou rode o fluxo à mão em
+   *Actions → Publicar no GitHub Pages*). O fluxo publica a partir do branch
+   padrão, seja qual for o nome dele.
 
 O endereço fica `https://<usuário>.github.io/rotinayuri/`. Todos os caminhos do
 app são relativos, então funciona em subpasta sem ajuste nenhum.

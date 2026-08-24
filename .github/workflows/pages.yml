@@ -1,11 +1,15 @@
-# Publica a pasta do repositório no GitHub Pages a cada push na main.
+# Publica a pasta do repositório no GitHub Pages a cada push no branch padrão.
 # O app é estático: não há build, é só copiar os arquivos como estão.
+#
+# O gatilho não fixa um nome de branch de propósito. Este repositório ainda não
+# tem `main`, e um nome escrito à mão aqui quebraria em silêncio no dia em que
+# o padrão mudasse — o fluxo rodaria e não publicaria nada, ou não rodaria.
+# Comparar com `default_branch` acerta nos dois casos.
 
 name: Publicar no GitHub Pages
 
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +23,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     environment:
       name: github-pages

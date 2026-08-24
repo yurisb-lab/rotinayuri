@@ -58,7 +58,7 @@ normalmente neles como página.
 1. Publique a pasta em qualquer hospedagem estática com HTTPS ou acesse por
    `localhost`. O repositório já traz o fluxo do **GitHub Pages** em
    `.github/workflows/pages.yml`: em *Settings → Pages*, escolha **GitHub Actions**
-   como origem, e cada push na `main` publica em
+   como origem, e cada push no branch padrão publica em
    `https://<usuário>.github.io/rotinayuri/`. Todos os caminhos do app são
    relativos, então funciona em subpasta.
 2. Abra no Chrome → menu ⋮ → **Adicionar à tela inicial**.
