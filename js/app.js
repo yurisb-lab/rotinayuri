@@ -28,11 +28,12 @@ import * as semana from './views/semana.js';
 import * as pessoas from './views/pessoas.js';
 import * as lugares from './views/lugares.js';
 import * as retrospectiva from './views/retrospectiva.js';
+import * as sync from './views/sync.js';
 
 const VIEWS = {
   hoje, tarefas, calendario, registro, notas, entrada, mais,
   dashboard, historico, config, dados, categorias, busca,
-  semana, pessoas, lugares, retrospectiva,
+  semana, pessoas, lugares, retrospectiva, sync,
 };
 
 async function boot() {
@@ -62,6 +63,10 @@ async function boot() {
   registerServiceWorker();
   handleShareTarget();
   askPersistentStorage();
+
+  /* A nuvem entra depois de a tela já estar de pé: sincronizar é acerto de
+     contas em segundo plano, nunca condição para o app abrir. */
+  import('./features/sync.js').then(m => m.start()).catch(e => console.warn('Sincronização não iniciou', e));
 }
 
 let refreshTimer = null;

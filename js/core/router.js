@@ -71,6 +71,7 @@ const TAB_OF = {
   notas: 'notas', entrada: 'entrada', mais: 'mais', config: 'mais', dados: 'mais',
   categorias: 'mais', dashboard: 'mais', historico: 'mais', busca: 'mais',
   semana: 'mais', pessoas: 'mais', lugares: 'mais', retrospectiva: 'mais',
+  sync: 'mais',
 };
 
 function highlightTab(name) {

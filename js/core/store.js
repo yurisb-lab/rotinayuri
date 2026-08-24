@@ -39,6 +39,14 @@ export const DEFAULT_SETTINGS = {
   onboarded: false,
   schemaVersion: 1,
   deviceId: null,
+  /* sincronização entre aparelhos (fica desligada até a pessoa ligar) */
+  syncEnabled: false,
+  firebaseConfig: null,
+  firebaseSdkVersion: '',
+  syncAccount: null,
+  syncPushed: {},
+  syncPulled: {},
+  lastSync: null,
   /* check-ins (fase 7) — desligados até a pessoa pedir */
   checkinsEnabled: false,
   checkinTimes: ['08:30', '13:30', '19:30'],

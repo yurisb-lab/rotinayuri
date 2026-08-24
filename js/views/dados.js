@@ -16,9 +16,11 @@ export async function render(root, { refresh }) {
   const u = await B.usage();
 
   root.appendChild(el('div', { class: 'card' },
-    el('h3', {}, 'Tudo fica neste aparelho'),
+    el('h3', {}, S.settings.get('syncEnabled') ? 'Neste aparelho e na sua nuvem' : 'Tudo fica neste aparelho'),
     el('p', { class: 'small muted', style: { marginTop: '6px' } },
-      'O Rotina não usa servidor, nuvem nem login. Faça backups com frequência — se o aplicativo for desinstalado ou os dados do navegador forem limpos, o conteúdo é perdido.'),
+      S.settings.get('syncEnabled')
+        ? 'Com a sincronização ligada, seus dados também ficam no seu projeto do Firebase e voltam ao instalar o app em outro aparelho. O backup em arquivo continua valendo — é o que não depende de conta nenhuma.'
+        : 'O Rotina não usa servidor, nuvem nem login. Faça backups com frequência — se o aplicativo for desinstalado ou os dados do navegador forem limpos, o conteúdo é perdido.'),
     S.settings.get('lastBackup')
       ? el('p', { class: 'tiny dim', style: { marginTop: '8px' } },
           `Último backup: ${new Date(S.settings.get('lastBackup')).toLocaleString('pt-BR')}`)

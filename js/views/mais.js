@@ -36,6 +36,7 @@ export async function render(root) {
 
   root.appendChild(el('div', { style: { marginTop: '20px' } }, section('Dados e ajustes')));
   root.appendChild(el('div', { class: 'card', style: { padding: '4px 12px' } },
+    row('repeat', 'Sincronização', resumoSync(), '#/sync'),
     row('data', 'Dados e backup', 'Exportar, importar, restaurar, apagar', '#/dados'),
     row('gear', 'Configurações', 'Tema, semana, leitura de imagens', '#/config'),
   ));
@@ -52,7 +53,16 @@ export async function render(root) {
       : el('p', { class: 'tiny', style: { color: 'var(--c-warn)' } }, 'Você ainda não fez um backup.')));
 
   root.appendChild(el('p', { class: 'tiny dim center', style: { marginTop: '20px' } },
-    'Rotina · PWA offline · seus dados ficam apenas neste aparelho'));
+    S.settings.get('syncEnabled')
+      ? 'Rotina · PWA offline · sincronizado entre seus aparelhos'
+      : 'Rotina · PWA offline · seus dados ficam apenas neste aparelho'));
+}
+
+function resumoSync() {
+  if (!S.settings.get('syncEnabled')) return 'Desligada — dados só neste aparelho';
+  const q = S.settings.get('lastSync');
+  return q ? `Em dia com ${S.settings.get('syncAccount') || 'sua conta'} · ${fmtDate(q.slice(0, 10), 'num')}`
+           : 'Ligada — falta a primeira rodada';
 }
 
 function row(ic, label, sub, href) {

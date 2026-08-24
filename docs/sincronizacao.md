@@ -1,4 +1,11 @@
-# Sincronização entre aparelhos — o que já está pronto e o que falta
+# Sincronização entre aparelhos — decisões e como ficou
+
+> **Situação: implementada.** A sincronização com o Firebase existe no app, em
+> *Mais → Sincronização*, e vem **desligada**. O passo a passo para ligar está em
+> [`firebase.md`](firebase.md); o motor está em `js/features/sync.js` e o
+> adaptador em `js/features/firebase.js`. O texto abaixo continua valendo — é o
+> raciocínio que levou até aqui, e a última seção diz como cada decisão foi
+> resolvida na prática.
 
 ## Primeiro, uma correção sobre a premissa
 
@@ -162,6 +169,40 @@ Hoje ele promete, sem asterisco:
 No dia em que a sincronização existir, essa frase deixa de ser verdadeira e
 precisa ser reescrita **antes** de a função ir para o ar, não depois. É a parte
 mais fácil de esquecer e a mais importante de não esquecer.
+
+---
+
+## Como ficou, na prática
+
+O que estava previsto e foi feito:
+
+| Previsto | Como ficou |
+|---|---|
+| `sync.js` subindo `changedSince` e baixando o que mudou | `js/features/sync.js`, dois marcadores por tabela: `syncPushed` (por `updatedAt` local) e `syncPulled` (pelo horário do servidor) |
+| Aplicar respeitando tombstones e `updatedAt` | `mesclar()` — última escrita vence; `tags` e `aliases` se unem; `deletedAt` viaja como qualquer campo |
+| Indicador de estado na interface | Tela *Sincronização*: desligada / falta entrar / sincronizando / em dia / sem rede / erro |
+| Regras de segurança | [`firestore.rules`](../firestore.rules), na raiz do repositório, obrigatórias no passo 5 do guia |
+| Login (Firebase Auth com Google) | Pop-up no computador, com queda automática para redirecionamento no celular |
+| Reescrever o README **antes** de a função ir para o ar | Feito no mesmo commit |
+
+Decisões tomadas na implementação, que o plano não previa:
+
+- **A fila de saída continua fora**, como o plano dizia que podia. O marcador por
+  tabela faz o mesmo trabalho com menos peças: uma rodada perdida não perde nada,
+  porque o marcador só avança depois do envio bem-sucedido.
+- **O SDK não é embutido.** Ele é importado do CDN do Google sob demanda, e só
+  quando a sincronização está ligada. Quem nunca ligar não baixa um byte a mais, e
+  o app continua abrindo offline.
+- **A paginação da descida usa o documento como marcador** (`startAfter`), não o
+  horário. Um lote de 400 documentos gravados no mesmo instante compartilha o
+  mesmo `serverAt`; paginar por horário puro perderia o excedente em silêncio.
+- **O marcador de subida recua um milissegundo.** A comparação é `>`, e uma linha
+  gravada no mesmo milissegundo da última enviada ficaria para trás para sempre.
+- **`settings` não sincroniza.** Tema, horários e chaves de API são do aparelho.
+  Junto com eles fica a configuração do Firebase — que por isso precisa ser colada
+  uma vez em cada aparelho.
+- **`reminders` também não.** São derivados de tarefas e compromissos, e o próprio
+  aparelho os reconstrói depois de cada descida.
 
 ---
 

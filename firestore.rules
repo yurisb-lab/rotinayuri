@@ -1,0 +1,25 @@
+/* Regras de segurança do Firestore para o Rotina.
+
+   Cole isto em Firestore Database → Regras, no console do Firebase, e
+   publique. Sem elas, o banco fica aberto (ou fechado) do jeito que o
+   assistente de criação deixou — e "aberto" significa que qualquer pessoa
+   com o endereço do projeto lê a sua rotina inteira.
+
+   O que elas dizem, em uma frase: cada pessoa autenticada só enxerga o
+   caminho que começa com o próprio uid. */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /usuarios/{uid}/{colecao}/{documento} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    /* Tudo o mais fica fechado. */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

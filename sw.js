@@ -2,7 +2,7 @@
    Estratégia: app shell em cache (cache-first com atualização em segundo plano)
    e navegação com fallback para o index.html. */
 
-const VERSION = 'rotina-v5';
+const VERSION = 'rotina-v6';
 const SHELL = [
   './',
   'index.html',
@@ -28,6 +28,8 @@ const SHELL = [
   'js/features/gcal.js',
   'js/features/search.js',
   'js/features/backup.js',
+  'js/features/sync.js',
+  'js/features/firebase.js',
   'js/ui/modal.js',
   'js/ui/toast.js',
   'js/ui/forms.js',
@@ -47,6 +49,7 @@ const SHELL = [
   'js/views/dados.js',
   'js/views/categorias.js',
   'js/views/busca.js',
+  'js/views/sync.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/maskable-512.png',

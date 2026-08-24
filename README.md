@@ -4,15 +4,19 @@ PWA de organização de rotina, produtividade e registro pessoal.
 
 **Planejar → Executar → Registrar → Revisar.**
 Não é só uma lista de tarefas: é um diário operacional da sua rotina, integrado ao
-planejamento. Funciona offline, instala no celular e **guarda tudo apenas no seu aparelho**.
+planejamento. Funciona offline, instala no celular e **guarda tudo no seu aparelho**.
 
-- Sem servidor próprio, sem nuvem, sem Firebase/Supabase, sem login.
-- Todos os dados ficam no **IndexedDB** do navegador.
+- Todos os dados ficam no **IndexedDB** do navegador — é dele que o app lê e escreve, sempre.
 - Backup e restauração por arquivo **JSON**.
+- **Sincronização entre aparelhos é opcional e vem desligada.** Ao ligar, os dados
+  passam a ficar também num projeto do Firebase que é seu, sob a sua conta Google,
+  e a nuvem vira uma réplica que acerta as contas em segundo plano. Enquanto não
+  for ligada, nada sai do aparelho. Ver [`docs/firebase.md`](docs/firebase.md).
 
 O plano de evolução do app está em [`ROADMAP.md`](ROADMAP.md), o detalhamento das
-fases em [`docs/fases-3-11.md`](docs/fases-3-11.md) e a preparação para
-sincronizar entre aparelhos em [`docs/sincronizacao.md`](docs/sincronizacao.md).
+fases em [`docs/fases-3-11.md`](docs/fases-3-11.md), o passo a passo para ligar a
+sincronização em [`docs/firebase.md`](docs/firebase.md) e as decisões por trás dela
+em [`docs/sincronizacao.md`](docs/sincronizacao.md).
 
 ---
 
@@ -39,20 +43,44 @@ fica numa coluna centralizada — não é o layout de celular esticado.
 O Firefox e o Safari não instalam PWA no computador, mas o app funciona
 normalmente neles como página.
 
-> **Atenção:** o computador e o celular são **dois bancos separados**. Cada
-> navegador tem o próprio IndexedDB, então o que você registrar num aparelho não
-> aparece no outro. Hoje a ponte entre eles é o backup: *Mais → Dados e backup →
-> Exportar* num, *Importar* no outro. Sincronização automática ainda não existe —
-> o que já foi preparado para ela está em [`docs/sincronizacao.md`](docs/sincronizacao.md).
+> **Atenção:** sem sincronização, o computador e o celular são **dois bancos
+> separados** — cada navegador tem o próprio IndexedDB, e o que você registrar num
+> aparelho não aparece no outro. Duas pontes possíveis:
+>
+> - **Sincronização automática** (*Mais → Sincronização*): os mesmos dados nos dois,
+>   sozinho, em segundo plano. Precisa de um projeto do Firebase — 15 minutos de
+>   configuração, uma vez, seguindo [`docs/firebase.md`](docs/firebase.md).
+> - **Backup em arquivo**: *Mais → Dados e backup → Exportar* num, *Importar* no
+>   outro. Não depende de conta nenhuma.
 
 ### Instalando no celular (Android / S23 Ultra)
 
-1. Publique a pasta em qualquer hospedagem estática com HTTPS
-   (GitHub Pages, Netlify, Cloudflare Pages…) ou acesse por `localhost`.
+1. Publique a pasta em qualquer hospedagem estática com HTTPS ou acesse por
+   `localhost`. O repositório já traz o fluxo do **GitHub Pages** em
+   `.github/workflows/pages.yml`: em *Settings → Pages*, escolha **GitHub Actions**
+   como origem, e cada push na `main` publica em
+   `https://<usuário>.github.io/rotinayuri/`. Todos os caminhos do app são
+   relativos, então funciona em subpasta.
 2. Abra no Chrome → menu ⋮ → **Adicionar à tela inicial**.
 3. Em **Mais → Configurações → Lembretes**, toque em **Ativar notificações**.
 
 Depois de instalado, o app abre e funciona sem internet.
+
+### Sincronizando computador e celular
+
+*Mais → Sincronização.* Vem desligada. Ligar leva 15 minutos, uma vez, e precisa
+de um projeto do Firebase seu — o passo a passo com telas e mensagens de erro
+está em [`docs/firebase.md`](docs/firebase.md).
+
+Como funciona: o app **nunca** espera a rede para mostrar uma tela. Ele lê e
+escreve no banco local, e a sincronização acontece em segundo plano — ao abrir,
+alguns segundos depois de cada alteração, ao voltar para o app e a cada cinco
+minutos. Sem rede, o que ficou pendente sobe na próxima conexão.
+
+Conflito entre dois aparelhos: **vence quem escreveu por último** (`updatedAt`).
+`tags` e `aliases` são a exceção, e se unem. Exclusão viaja como qualquer outra
+mudança — é para isso que existem os tombstones descritos em
+[`docs/sincronizacao.md`](docs/sincronizacao.md).
 
 ---
 
@@ -278,6 +306,8 @@ js/
     gcal.js             Google Agenda, .ics e compartilhamento
     search.js           Pesquisa global
     backup.js           Exportação/importação/limpeza
+    sync.js             Sincronização entre aparelhos (motor: o que sobe e o que desce)
+    firebase.js         Adaptador do Firebase (o único arquivo que conhece o Firestore)
   ui/
     modal.js            Folhas modais, confirmações e menus
     toast.js            Avisos rápidos
@@ -322,9 +352,20 @@ só as que mudam de status ficam gravadas em `occurrences`.
 
 ## Privacidade
 
-Nenhum dado sai do aparelho. Não há autenticação, servidor ou banco online.
-A única saída opcional é a API de IA que **você** configurar para ler imagens —
-desligada por padrão.
+Com a instalação padrão, **nenhum dado sai do aparelho**: não há autenticação,
+servidor nem banco online. Existem duas saídas, as duas opcionais e desligadas
+até você ligar:
 
-Como não há nuvem, **faça backups**: *Mais → Dados e backup → Exportar backup*.
-Se o app for desinstalado ou os dados do navegador forem limpos, o conteúdo se perde.
+- **Sincronização entre aparelhos** (*Mais → Sincronização*). Ligando, os dados
+  passam a ser copiados para um projeto do **Firebase que é seu**, sob a sua conta
+  Google. Não há servidor deste app no meio: nada passa por nenhum outro lugar.
+  As regras em [`firestore.rules`](firestore.rules) limitam a leitura e a escrita
+  à sua própria conta — publicá-las não é opcional. O que **não** sobe: as
+  configurações do aparelho (tema, horários, chaves de API) e os lembretes
+  agendados.
+- **API de IA para ler imagens**, se você configurar uma.
+
+**Faça backups de qualquer jeito**: *Mais → Dados e backup → Exportar backup*. Sem
+sincronização, desinstalar o app ou limpar os dados do navegador perde o conteúdo;
+com ela, o backup em arquivo continua sendo a cópia que não depende de conta
+nenhuma.
