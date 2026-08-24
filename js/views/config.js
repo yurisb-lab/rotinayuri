@@ -153,6 +153,8 @@ export async function render(root, { refresh }) {
 
   /* dados e sobre --------------------------------------------------------- */
   root.appendChild(el('div', { style: { marginTop: '20px' } }, section('Dados')));
+  root.appendChild(el('button', { class: 'btn btn--block', style: { marginBottom: '8px' }, onclick: () => go('#/sync') },
+    icon('repeat'), s.syncEnabled ? 'Sincronização entre aparelhos (ligada)' : 'Sincronizar com outro aparelho'));
   root.appendChild(el('button', { class: 'btn btn--block', onclick: () => go('#/dados') },
     icon('data'), 'Backup, importação e exclusão'));
   root.appendChild(el('button', { class: 'btn btn--block', style: { marginTop: '8px' }, onclick: () => go('#/categorias') },
@@ -162,7 +164,9 @@ export async function render(root, { refresh }) {
     el('h3', {}, 'Sobre o Rotina'),
     el('p', { class: 'small muted', style: { marginTop: '6px' } },
       'Planejar → Executar → Registrar → Revisar. Um diário operacional da sua rotina, que funciona offline e guarda tudo no seu aparelho.'),
-    el('p', { class: 'tiny dim' }, 'Sem servidor próprio, sem login, sem nuvem.'),
+    el('p', { class: 'tiny dim' }, s.syncEnabled
+      ? 'Sincronização ligada: os dados também ficam no seu projeto do Firebase.'
+      : 'Sem servidor próprio, sem login, sem nuvem.'),
     el('p', { class: 'tiny dim' }, `Instalado: ${window.matchMedia('(display-mode: standalone)').matches ? 'sim' : 'ainda não (use "Adicionar à tela inicial")'}`)));
 }
 
